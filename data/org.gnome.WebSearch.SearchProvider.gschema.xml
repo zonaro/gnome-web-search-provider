@@ -14,5 +14,15 @@
           google-maps, bing-images, youtube, ...). Unknown ids are ignored.
         </description>
     </key>
+    <key name="browser" type="s">
+      <default>'xdg-open'</default>
+      <summary>Browser command for opening search results</summary>
+      <description>
+          Command used to open search results in LaunchSearch and
+          ActivateResult, e.g. xdg-open (default), firefox,
+          google-chrome, or 'flatpak run org.mozilla.firefox'.
+          Arguments may be included; the search URL is appended last.
+        </description>
+    </key>
   </schema>
 </schemalist>
