@@ -10,8 +10,9 @@ URLs were verified in 2026 (HTTP checks + redirect inspection):
 * Google now prefers ``udm=`` over ``tbm=`` for verticals: images
   ``udm=2``, videos ``udm=vids``.
 * Marginalia moved to ``marginalia-search.com``.
-* Kagi and You.com are excluded on purpose: anonymous searches redirect
-  to a sign-in page, which is a poor experience for a launcher.
+* Kagi and You.com are included (requested in upstream issue #1): Kagi
+  shows a sign-in wall for anonymous searches (it needs a paid Kagi
+  account), You.com works anonymously. Both rely on the browser session.
 """
 
 from dataclasses import dataclass, field
@@ -82,6 +83,8 @@ PROVIDERS: Dict[str, SearchProvider] = {
     "swisscows": _p("swisscows", "Swisscows", "https://swisscows.com/web?query={query}", "web"),
     "marginalia": _p("marginalia", "Marginalia", "https://marginalia-search.com/search?query={query}", "web"),
     "perplexity": _p("perplexity", "Perplexity", "https://www.perplexity.ai/search?q={query}", "web"),
+    "kagi": _p("kagi", "Kagi", "https://kagi.com/search?q={query}", "web"),
+    "you": _p("you", "You.com", "https://you.com/search?q={query}", "web"),
     # ----------------------------------------------------------------- Images
     "google-images": _p("google-images", "Google Images", "https://www.google.com/search?udm=2&q={query}", "images"),
     "bing-images": _p("bing-images", "Bing Images", "https://www.bing.com/images/search?q={query}", "images"),
