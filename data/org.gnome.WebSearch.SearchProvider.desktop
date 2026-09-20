@@ -1,10 +1,9 @@
 [Desktop Entry]
 Name=Web Search Provider
 Comment=Web search from GNOME Shell
-Exec=/usr/local/bin/gnome-web-search-provider.py 
+Exec=/usr/local/bin/gnome-web-search-provider
 Icon=web-browser
 Terminal=false
 Type=Application
 StartupNotify=true
 Categories=GNOME;GTK;System;Development;Utility
-

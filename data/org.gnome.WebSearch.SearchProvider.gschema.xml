@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-web-search-provider">
+  <schema id="org.gnome.WebSearch.SearchProvider" path="/org/gnome/WebSearch/SearchProvider/">
+    <key name="enabled-providers" type="as">
+      <default>['google']</default>
+      <summary>Enabled search providers</summary>
+<description>
+          List of search providers enabled for the web search in GNOME Shell.
+          One or more providers can be enabled at the same time; each enabled
+          provider will show a result entry in the search overview.
+          Valid ids are the keys in
+          src/gnome_web_search_provider/providers.py
+          (e.g. google, bing, duckduckgo, brave, startpage, google-images,
+          google-maps, bing-images, youtube, ...). Unknown ids are ignored.
+        </description>
+    </key>
+  </schema>
+</schemalist>

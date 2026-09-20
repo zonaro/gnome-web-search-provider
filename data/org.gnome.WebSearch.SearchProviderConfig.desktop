@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Web Search Providers
+Name[pt_BR]=Provedores de busca web
+Comment=Choose which web search providers are enabled in GNOME Shell
+Comment[pt_BR]=Escolha quais provedores de busca web ficam habilitados no GNOME Shell
+Exec=/usr/local/bin/gnome-web-search-provider-config
+Icon=preferences-system-search
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=GNOME;GTK;Settings;Utility
