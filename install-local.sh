@@ -4,7 +4,7 @@
 # Installs into ~/.local (bins, Python package, GSettings schema, desktop
 # entries, D-Bus service and the GNOME Shell search-provider .ini), which
 # GNOME picks up natively:
-#   - ~/.local/bin                    -> gnome-web-search-provider{, -config}
+#   - ~/.local/bin                    -> gnome-web-search-provider{, -cli, -config}
 #   - user site-packages              -> gnome_web_search_provider package
 #   - ~/.local/share/glib-2.0/schemas -> GSettings schema (compiled)
 #   - ~/.local/share/applications     -> desktop entries
@@ -46,7 +46,13 @@ cat > "$DEST_BIN/gnome-web-search-provider-config" <<EOF
 #!/bin/sh
 exec "$PYTHON" -m gnome_web_search_provider.config_app "\$@"
 EOF
-chmod +x "$DEST_BIN/gnome-web-search-provider" "$DEST_BIN/gnome-web-search-provider-config"
+cat > "$DEST_BIN/gnome-web-search-provider-cli" <<EOF
+#!/bin/sh
+exec "$PYTHON" -m gnome_web_search_provider.cli "\$@"
+EOF
+chmod +x "$DEST_BIN/gnome-web-search-provider" \
+    "$DEST_BIN/gnome-web-search-provider-config" \
+    "$DEST_BIN/gnome-web-search-provider-cli"
 
 # 3) GSettings schema (compiled -> detected by GLib)
 cp data/org.gnome.WebSearch.SearchProvider.gschema.xml "$DEST_SHARE/glib-2.0/schemas/"
@@ -77,5 +83,6 @@ cp data/org.gnome.WebSearch.SearchProvider.ini \
 
 echo "==> Concluído!"
 echo "    Deslogue e relogue (ou reinicie o GNOME Shell) para ativar."
-echo "    Depois:  gnome-web-search-provider-config   (tela de provedores)"
+echo "    Depois:  gnome-web-search-provider-config  (tela de provedores)"
+echo "    ou:      gnome-web-search-provider-cli list"
 echo "    ou:      gsettings get org.gnome.WebSearch.SearchProvider enabled-providers"

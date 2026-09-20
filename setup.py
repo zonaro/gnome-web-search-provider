@@ -8,16 +8,22 @@ Install system-wide (root required for /usr/local paths):
 
 The second command registers the GSettings schema so the provider and the
 configuration app can use it.
+
+The provider daemon itself has zero runtime dependencies beyond the Python
+standard library (upstream issue #2): D-Bus marshalling is implemented from
+scratch in ``gnome_web_search_provider/dbus.py``. PyGObject is only needed
+for the optional GTK configuration app (``config-app`` extra).
 """
 
 from setuptools import find_packages, setup
 
 setup(
     name="gnome-web-search-provider",
-    version="1.0.0",
+    version="1.1.0",
     description=(
         "GNOME Shell web search provider with multiple configurable "
-        "search engines (Google, Bing, DuckDuckGo, Brave, Startpage, ...)"
+        "search engines (Google, Bing, DuckDuckGo, Brave, Startpage, Kagi, "
+        "You.com, ...) and a configurable web browser"
     ),
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
@@ -28,6 +34,7 @@ setup(
     entry_points={
         "console_scripts": [
             "gnome-web-search-provider = gnome_web_search_provider:main",
+            "gnome-web-search-provider-cli = gnome_web_search_provider.cli:main",
             "gnome-web-search-provider-config = gnome_web_search_provider.config_app:main",
         ],
     },
@@ -53,10 +60,9 @@ setup(
         ),
     ],
     python_requires=">=3.8",
-    install_requires=[
-        "dasbus>=1.7",
-        "PyGObject>=3.36",
-    ],
+    extras_require={
+        "config-app": ["PyGObject>=3.36"],
+    },
     classifiers=[
         "Environment :: Plugins",
         "Intended Audience :: End Users/Desktop",
