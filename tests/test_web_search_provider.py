@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Tests for the multi-provider GNOME web search provider."""
 
+import io
 import os
 import shutil
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from unittest.mock import patch
 
 # Make the package importable from the source tree.
@@ -16,9 +18,13 @@ from gnome_web_search_provider import (  # noqa: E402
     BUS_NAME,
     OBJECT_PATH,
     RESULT_SEPARATOR,
+    SERVICE_METHODS,
     WebSearchProvider,
 )
+from gnome_web_search_provider import cli  # noqa: E402
+from gnome_web_search_provider import dbus as dbus_mod  # noqa: E402
 from gnome_web_search_provider.config import (  # noqa: E402
+    DEFAULT_BROWSER,
     DEFAULT_ENABLED_PROVIDERS,
     ConfigManager,
 )
@@ -28,8 +34,9 @@ from gnome_web_search_provider.providers import PROVIDERS  # noqa: E402
 class FakeConfig:
     """In-memory ConfigManager stand-in for provider tests."""
 
-    def __init__(self, enabled=None):
+    def __init__(self, enabled=None, browser=DEFAULT_BROWSER):
         self._enabled = list(enabled) if enabled is not None else list(DEFAULT_ENABLED_PROVIDERS)
+        self._browser = browser
 
     def get_enabled_providers(self):
         return list(self._enabled)
@@ -42,6 +49,12 @@ class FakeConfig:
             self._enabled.append(provider_id)
         elif not enabled and provider_id in self._enabled:
             self._enabled.remove(provider_id)
+
+    def get_browser(self):
+        return self._browser
+
+    def set_browser(self, command):
+        self._browser = command
 
 
 class TestWebSearchProvider(unittest.TestCase):
@@ -58,6 +71,10 @@ class TestWebSearchProvider(unittest.TestCase):
 
     def test_default_provider_list_includes_google(self):
         self.assertIn("google", PROVIDERS)
+
+    def test_service_methods_match_interface(self):
+        expected = {"GetInitialResultSet", "GetSubsearchResultSet", "GetResultMetas", "ActivateResult", "LaunchSearch"}
+        self.assertEqual(set(SERVICE_METHODS), expected)
 
     # ------------------------------------------------------- result sets
 
@@ -166,8 +183,42 @@ class TestWebSearchProvider(unittest.TestCase):
         self.provider.ActivateResult("legacy-id-without-separator", ["term"], 0)
         mock_popen.assert_not_called()
 
-    def test_launch_search_does_nothing(self):
-        self.provider.LaunchSearch(["test"], 0)
+    # ----------------------------------------------------------- browser
+
+    @patch("gnome_web_search_provider.subprocess.Popen")
+    def test_activate_result_uses_configured_browser(self, mock_popen):
+        provider = WebSearchProvider(config=FakeConfig(["google"], browser="firefox"))
+        provider.ActivateResult(f"google{RESULT_SEPARATOR}linux", ["linux"], 0)
+        call_args = mock_popen.call_args[0][0]
+        self.assertEqual(call_args[0], "firefox")
+        self.assertEqual(call_args[1], "https://www.google.com/search?q=linux")
+
+    @patch("gnome_web_search_provider.subprocess.Popen")
+    def test_activate_result_browser_with_args(self, mock_popen):
+        provider = WebSearchProvider(
+            config=FakeConfig(["google"], browser="flatpak run org.mozilla.firefox")
+        )
+        provider.ActivateResult(f"google{RESULT_SEPARATOR}linux", ["linux"], 0)
+        call_args = mock_popen.call_args[0][0]
+        self.assertEqual(
+            call_args,
+            ["flatpak", "run", "org.mozilla.firefox", "https://www.google.com/search?q=linux"],
+        )
+
+    @patch("gnome_web_search_provider.subprocess.Popen")
+    def test_launch_search_opens_first_enabled_provider(self, mock_popen):
+        provider = WebSearchProvider(config=FakeConfig(["bing", "google"]))
+        provider.LaunchSearch(["hello", "world"], 0)
+        mock_popen.assert_called_once()
+        call_args = mock_popen.call_args[0][0]
+        self.assertEqual(call_args[0], "xdg-open")
+        self.assertEqual(call_args[1], "https://www.bing.com/search?q=hello+world")
+
+    @patch("gnome_web_search_provider.subprocess.Popen")
+    def test_launch_search_with_no_enabled_providers_does_nothing(self, mock_popen):
+        provider = WebSearchProvider(config=FakeConfig([]))
+        provider.LaunchSearch(["hello"], 0)
+        mock_popen.assert_not_called()
 
     # -------------------------------------------------------- dbus xml
 
@@ -198,9 +249,15 @@ class TestProviderUrls(unittest.TestCase):
         for provider in PROVIDERS.values():
             self.assertIn(provider.category, category_ids, provider.provider_id)
 
+    def test_kagi_and_you_are_back(self):
+        self.assertIn("kagi", PROVIDERS)
+        self.assertIn("you", PROVIDERS)
+        self.assertTrue(PROVIDERS["kagi"].build_url("t").startswith("https://kagi.com/"))
+        self.assertTrue(PROVIDERS["you"].build_url("t").startswith("https://you.com/"))
 
-class TestConfigManager(unittest.TestCase):
-    """JSON file backend, isolated under a temporary XDG_CONFIG_HOME."""
+
+class _TempXdgMixin:
+    """Isolate the JSON file backend under a temporary XDG_CONFIG_HOME."""
 
     def setUp(self):
         self._tmp = tempfile.mkdtemp(prefix="gwsp-test-")
@@ -214,32 +271,38 @@ class TestConfigManager(unittest.TestCase):
             os.environ["XDG_CONFIG_HOME"] = self._old_xdg
         shutil.rmtree(self._tmp, ignore_errors=True)
 
+    def make_config(self):
+        return ConfigManager(use_gsettings=False)
+
+
+class TestConfigManager(_TempXdgMixin, unittest.TestCase):
+    """JSON file backend, isolated under a temporary XDG_CONFIG_HOME."""
+
     def test_default_is_google(self):
-        config = ConfigManager(use_gsettings=False)
+        config = self.make_config()
         self.assertEqual(config.get_enabled_providers(), ["google"])
         self.assertEqual(config.backend, "file")
 
     def test_set_and_persist(self):
-        config = ConfigManager(use_gsettings=False)
+        config = self.make_config()
         config.set_enabled_providers(["google", "bing"])
-        # A brand new instance reads the same file.
-        again = ConfigManager(use_gsettings=False)
+        again = self.make_config()
         self.assertEqual(again.get_enabled_providers(), ["google", "bing"])
 
     def test_set_dedupes_and_strips(self):
-        config = ConfigManager(use_gsettings=False)
+        config = self.make_config()
         config.set_enabled_providers(["  google ", "google", "", "bing", "bing"])
         self.assertEqual(config.get_enabled_providers(), ["google", "bing"])
 
     def test_toggle(self):
-        config = ConfigManager(use_gsettings=False)
+        config = self.make_config()
         config.toggle_provider("duckduckgo", True)
         self.assertEqual(config.get_enabled_providers(), ["google", "duckduckgo"])
         config.toggle_provider("google", False)
         self.assertEqual(config.get_enabled_providers(), ["duckduckgo"])
 
     def test_is_provider_enabled(self):
-        config = ConfigManager(use_gsettings=False)
+        config = self.make_config()
         self.assertTrue(config.is_provider_enabled("google"))
         self.assertFalse(config.is_provider_enabled("bing"))
 
@@ -248,8 +311,270 @@ class TestConfigManager(unittest.TestCase):
         os.makedirs(config_dir, exist_ok=True)
         with open(os.path.join(config_dir, "config.json"), "w", encoding="utf-8") as fh:
             fh.write("{not valid json")
-        config = ConfigManager(use_gsettings=False)
+        config = self.make_config()
         self.assertEqual(config.get_enabled_providers(), ["google"])
+
+    # ---------------------------------------------------------- browser
+
+    def test_browser_default_is_xdg_open(self):
+        config = self.make_config()
+        self.assertEqual(config.get_browser(), DEFAULT_BROWSER)
+
+    def test_browser_set_and_persist(self):
+        config = self.make_config()
+        config.set_browser("firefox")
+        again = self.make_config()
+        self.assertEqual(again.get_browser(), "firefox")
+
+    def test_browser_set_ignores_empty(self):
+        config = self.make_config()
+        config.set_browser("   ")
+        self.assertEqual(config.get_browser(), DEFAULT_BROWSER)
+
+    def test_browser_survives_provider_update(self):
+        config = self.make_config()
+        config.set_browser("google-chrome")
+        config.set_enabled_providers(["bing"])
+        again = self.make_config()
+        self.assertEqual(again.get_browser(), "google-chrome")
+        self.assertEqual(again.get_enabled_providers(), ["bing"])
+
+
+class TestCli(_TempXdgMixin, unittest.TestCase):
+    """CLI commands, forced onto the isolated JSON backend."""
+
+    def setUp(self):
+        super().setUp()
+        self._def = patch.object(cli, "ConfigManager", self.make_config)
+        self._def.start()
+
+    def tearDown(self):
+        self._def.stop()
+        super().tearDown()
+
+    def run_cli(self, *argv):
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            code = cli.main(list(argv))
+        return code, buf.getvalue()
+
+    def test_list_returns_zero_and_shows_backend(self):
+        code, out = self.run_cli("list")
+        self.assertEqual(code, 0)
+        self.assertIn("Backend: file", out)
+        self.assertIn("google", out)
+
+    def test_status_aliases_list(self):
+        code, out = self.run_cli("status")
+        self.assertEqual(code, 0)
+        self.assertIn("google", out)
+
+    def test_enable_adds_provider(self):
+        code, _ = self.run_cli("enable", "bing", "duckduckgo")
+        self.assertEqual(code, 0)
+        self.assertEqual(self.make_config().get_enabled_providers(), ["google", "bing", "duckduckgo"])
+
+    def test_disable_removes_provider(self):
+        self.make_config().set_enabled_providers(["google", "bing"])
+        code, _ = self.run_cli("disable", "bing")
+        self.assertEqual(code, 0)
+        self.assertEqual(self.make_config().get_enabled_providers(), ["google"])
+
+    def test_set_replaces_list(self):
+        code, _ = self.run_cli("set", "brave")
+        self.assertEqual(code, 0)
+        self.assertEqual(self.make_config().get_enabled_providers(), ["brave"])
+
+    def test_set_accepts_empty_list(self):
+        code, _ = self.run_cli("set")
+        self.assertEqual(code, 0)
+        self.assertEqual(self.make_config().get_enabled_providers(), [])
+
+    def test_unknown_provider_rejected(self):
+        with self.assertRaises(SystemExit) as ctx:
+            self.run_cli("enable", "does-not-exist")
+        self.assertEqual(ctx.exception.code, 1)
+        self.assertEqual(self.make_config().get_enabled_providers(), ["google"])
+
+    def test_browser_get_and_set(self):
+        code, out = self.run_cli("browser")
+        self.assertEqual(code, 0)
+        self.assertEqual(out.strip(), DEFAULT_BROWSER)
+        code, _ = self.run_cli("browser", "firefox")
+        self.assertEqual(code, 0)
+        self.assertEqual(self.make_config().get_browser(), "firefox")
+
+
+class TestDbusWire(unittest.TestCase):
+    """Round-trips of the pure-stdlib D-Bus marshalling."""
+
+    def roundtrip(self, signature, values):
+        tokens = dbus_mod.split_types(signature)
+        raw = dbus_mod.pack_types(tokens, values)
+        return dbus_mod.unpack_types(tokens, raw)
+
+    def test_split_types(self):
+        self.assertEqual(dbus_mod.split_types("as"), ["as"])
+        self.assertEqual(dbus_mod.split_types("aas"), ["aas"])
+        self.assertEqual(dbus_mod.split_types("sasu"), ["s", "as", "u"])
+        self.assertEqual(dbus_mod.split_types("aa{sv}"), ["aa{sv}"])
+        self.assertEqual(dbus_mod.split_types("suv"), ["s", "u", "v"])
+        self.assertEqual(dbus_mod.split_types("(yv)"), ["(yv)"])
+
+    def test_roundtrip_as(self):
+        self.assertEqual(self.roundtrip("as", [["a", "b c", ""]]), [["a", "b c", ""]])
+
+    def test_roundtrip_aas(self):
+        self.assertEqual(self.roundtrip("aas", [[["x", "y"], []]]), [[["x", "y"], []]])
+
+    def test_roundtrip_sasu(self):
+        value = ["result-id", ["hello", "world"], 123]
+        self.assertEqual(self.roundtrip("sasu", value), value)
+
+    def test_roundtrip_asu(self):
+        value = [["hello"], 7]
+        self.assertEqual(self.roundtrip("asu", value), value)
+
+    def test_roundtrip_u(self):
+        self.assertEqual(self.roundtrip("u", [42]), [42])
+
+    def test_roundtrip_s(self):
+        self.assertEqual(self.roundtrip("s", ["unicode ✓ é"]), ["unicode ✓ é"])
+
+    def test_roundtrip_aa_sv(self):
+        packed = self.roundtrip(
+            "aa{sv}",
+            [
+                [
+                    {"id": dbus_mod.Variant("s", "r1"), "name": dbus_mod.Variant("s", "N1")},
+                    {"id": dbus_mod.Variant("s", "r2")},
+                ],
+            ],
+        )
+        # D-Bus dicts are arrays of {key, value} structs, so each entry of the
+        # outer array comes back as a list of single-entry dicts.
+        self.assertEqual(
+            packed,
+            [
+                [
+                    [{"id": dbus_mod.Variant("s", "r1")}, {"name": dbus_mod.Variant("s", "N1")}],
+                    [{"id": dbus_mod.Variant("s", "r2")}],
+                ],
+            ],
+        )
+
+    def test_roundtrip_sv_variant(self):
+        packed = self.roundtrip("a{sv}", [{"k": dbus_mod.Variant("s", "v")}])
+        self.assertEqual(packed, [[{"k": dbus_mod.Variant("s", "v")}]])
+
+    def test_build_and_parse_message(self):
+        fields = {
+            dbus_mod.FIELD_PATH: dbus_mod.Variant("o", "/org/gnome/WebSearch/SearchProvider"),
+            dbus_mod.FIELD_INTERFACE: dbus_mod.Variant("s", "org.gnome.Shell.SearchProvider2"),
+            dbus_mod.FIELD_MEMBER: dbus_mod.Variant("s", "GetInitialResultSet"),
+            dbus_mod.FIELD_SIGNATURE: dbus_mod.Variant("g", "as"),
+        }
+        body = dbus_mod.pack_types(["as"], [["hello", "world"]])
+        raw = dbus_mod.build_message(dbus_mod.MESSAGE_METHOD_CALL, 17, fields, body)
+        mtype, serial, parsed_fields, parsed_body = dbus_mod.parse_message(raw)
+        self.assertEqual(mtype, dbus_mod.MESSAGE_METHOD_CALL)
+        self.assertEqual(serial, 17)
+        self.assertEqual(parsed_fields[dbus_mod.FIELD_MEMBER], "GetInitialResultSet")
+        self.assertEqual(parsed_fields[dbus_mod.FIELD_SIGNATURE], "as")
+        self.assertEqual(dbus_mod.unpack_types(["as"], parsed_body), [["hello", "world"]])
+
+    def test_variant_equality(self):
+        self.assertEqual(dbus_mod.Variant("s", "x"), dbus_mod.Variant("s", "x"))
+        self.assertNotEqual(dbus_mod.Variant("s", "x"), dbus_mod.Variant("u", 1))
+
+    def test_dispatch_replies_with_call_serial(self):
+        service = dbus_mod.DBusService("org.test.Service")
+        handler = type("H", (), {"Echo": lambda self, arg: arg})()
+        service.export(
+            "/org/test/Path",
+            "org.test.Interface",
+            handler,
+            {"Echo": ("s", "s")},
+        )
+        fields = {
+            dbus_mod.FIELD_PATH: "/org/test/Path",
+            dbus_mod.FIELD_INTERFACE: "org.test.Interface",
+            dbus_mod.FIELD_MEMBER: "Echo",
+            dbus_mod.FIELD_SENDER: ":1.42",
+            dbus_mod.FIELD_SIGNATURE: "s",
+        }
+        body = dbus_mod.pack_types(["s"], ["ping"])
+        raw = service._dispatch(fields, body, 99)
+        mtype, _serial, reply_fields, reply_body = dbus_mod.parse_message(raw)
+        self.assertEqual(mtype, dbus_mod.MESSAGE_METHOD_RETURN)
+        self.assertEqual(reply_fields[dbus_mod.FIELD_REPLY_SERIAL], 99)
+        self.assertEqual(reply_fields[dbus_mod.FIELD_DESTINATION], ":1.42")
+        self.assertEqual(dbus_mod.unpack_types(["s"], reply_body), ["ping"])
+
+    def test_dispatch_error_replies_with_call_serial(self):
+        service = dbus_mod.DBusService("org.test.Service")
+        fields = {
+            dbus_mod.FIELD_PATH: "/org/test/Missing",
+            dbus_mod.FIELD_SENDER: ":1.42",
+        }
+        raw = service._dispatch(fields, b"", 7)
+        mtype, _serial, reply_fields, _reply_body = dbus_mod.parse_message(raw)
+        self.assertEqual(mtype, dbus_mod.MESSAGE_ERROR)
+        self.assertEqual(reply_fields[dbus_mod.FIELD_REPLY_SERIAL], 7)
+
+    def test_error_reply_includes_signature(self):
+        # A reply with a body but no SIGNATURE header field is dropped by
+        # dbus-broker as "invalid body"; the error text is sent as "s".
+        service = dbus_mod.DBusService("org.test.Service")
+        fields = {dbus_mod.FIELD_SENDER: ":1.42"}
+        raw = service._reply_error(fields, 3, "org.freedesktop.DBus.Error.Failed", "boom")
+        mtype, _serial, reply_fields, reply_body = dbus_mod.parse_message(raw)
+        self.assertEqual(mtype, dbus_mod.MESSAGE_ERROR)
+        self.assertEqual(reply_fields[dbus_mod.FIELD_SIGNATURE], "s")
+        self.assertEqual(dbus_mod.unpack_types(["s"], reply_body), ["boom"])
+
+    def test_dispatch_introspect_returns_xml(self):
+        # Clients introspect (interface org.freedesktop.DBus.Introspectable)
+        # before calling a typed method; the export must match by path alone.
+        service = dbus_mod.DBusService("org.test.Service")
+        handler = type("H", (), {"Echo": lambda self, arg: arg})()
+        service.export(
+            "/org/test/Path",
+            "org.test.Interface",
+            handler,
+            {"Echo": ("s", "s")},
+            introspect_xml="<node/>",
+        )
+        fields = {
+            dbus_mod.FIELD_PATH: "/org/test/Path",
+            dbus_mod.FIELD_INTERFACE: "org.freedesktop.DBus.Introspectable",
+            dbus_mod.FIELD_MEMBER: "Introspect",
+        }
+        raw = service._dispatch(fields, b"", 5)
+        mtype, _serial, reply_fields, reply_body = dbus_mod.parse_message(raw)
+        self.assertEqual(mtype, dbus_mod.MESSAGE_METHOD_RETURN)
+        self.assertEqual(reply_fields[dbus_mod.FIELD_SIGNATURE], "s")
+        self.assertEqual(dbus_mod.unpack_types(["s"], reply_body), ["<node/>"])
+
+    def test_service_methods_match_declared_xml(self):
+        # SERVICE_METHODS drives the wire dispatch, so its signatures must
+        # match the introspection XML that clients actually read.  A drift
+        # here (e.g. "aas" vs "as as") only shows up as a runtime Failure.
+        import xml.etree.ElementTree as ET
+
+        root = ET.fromstring(WebSearchProvider.__dbus_xml__)
+        iface = root.find("./interface")
+        self.assertIsNotNone(iface)
+        for method in iface.findall("method"):
+            name = method.get("name")
+            self.assertIn(name, SERVICE_METHODS, f"XML declares undeclared method {name}")
+            declared = SERVICE_METHODS[name][0]
+            in_args = [a.get("type") for a in method.findall("arg") if a.get("direction") == "in"]
+            self.assertEqual(
+                declared,
+                "".join(in_args),
+                f"{name}: SERVICE_METHODS {declared!r} != XML inputs {in_args!r}",
+            )
 
 
 if __name__ == "__main__":
