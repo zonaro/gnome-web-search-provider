@@ -46,7 +46,6 @@ setup(
         (
             "share/applications",
             [
-                "data/org.gnome.WebSearch.SearchProvider.desktop",
                 "data/org.gnome.WebSearch.SearchProviderConfig.desktop",
             ],
         ),
