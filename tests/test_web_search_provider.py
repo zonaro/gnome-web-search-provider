@@ -4,6 +4,8 @@
 import io
 import os
 import shutil
+import socket
+import struct
 import sys
 import tempfile
 import unittest
@@ -13,6 +15,10 @@ from unittest.mock import patch
 # Make the package importable from the source tree.
 SRC = os.path.join(os.path.dirname(__file__), "..", "src")
 sys.path.insert(0, os.path.abspath(SRC))
+
+# Pin English: metas assertions below are written in English and must not
+# depend on the machine language (see tests/test_i18n.py for locale coverage).
+os.environ["GWSP_LANG"] = "en"
 
 from gnome_web_search_provider import (  # noqa: E402
     BUS_NAME,
@@ -84,7 +90,11 @@ class TestWebSearchProvider(unittest.TestCase):
 
     def test_initial_result_set_empty_terms(self):
         result = self.provider.GetInitialResultSet([])
-        self.assertEqual(result, [f"google{RESULT_SEPARATOR}"])
+        self.assertEqual(result, [])
+
+    def test_initial_result_set_blank_terms(self):
+        result = self.provider.GetInitialResultSet(["   "])
+        self.assertEqual(result, [])
 
     def test_subsearch_result_set(self):
         result = self.provider.GetSubsearchResultSet(["previous"], ["new"])
@@ -120,7 +130,7 @@ class TestWebSearchProvider(unittest.TestCase):
         self.assertIn("id", meta)
         self.assertIn("name", meta)
         self.assertIn("description", meta)
-        self.assertIn("icon", meta)
+        self.assertIn("gicon", meta)
 
     def test_get_result_metas_values(self):
         result = self.provider.GetResultMetas([f"bing{RESULT_SEPARATOR}test query"])
@@ -128,7 +138,11 @@ class TestWebSearchProvider(unittest.TestCase):
         self.assertEqual(meta["id"].unpack(), f"bing{RESULT_SEPARATOR}test query")
         self.assertEqual(meta["name"].unpack(), "Search Bing for 'test query'")
         self.assertEqual(meta["description"].unpack(), "Press Enter to open in browser")
-        self.assertEqual(meta["icon"].unpack(), "web-browser")
+        gicon = meta["gicon"].unpack()
+        if os.path.isabs(gicon):
+            self.assertTrue(os.path.isfile(gicon), gicon)
+        else:
+            self.assertTrue(gicon.endswith("-symbolic") or gicon == "web-browser", gicon)
 
     def test_get_result_metas_skips_unknown_provider(self):
         result = self.provider.GetResultMetas(["nope-term"])
@@ -405,6 +419,52 @@ class TestCli(_TempXdgMixin, unittest.TestCase):
         self.assertEqual(self.make_config().get_browser(), "firefox")
 
 
+class TestResultIcons(_TempXdgMixin, unittest.TestCase):
+    """Metas carry the cached favicon or the themed fallback (config parity)."""
+
+    def setUp(self):
+        super().setUp()
+        from gnome_web_search_provider import _result_icon  # noqa: E402
+        from gnome_web_search_provider.providers import fallback_icon_name  # noqa: E402
+
+        self._result_icon = _result_icon
+        self._fallback_icon_name = fallback_icon_name
+        self._old_cache = os.environ.get("XDG_CACHE_HOME")
+        os.environ["XDG_CACHE_HOME"] = self._tmp
+
+    def tearDown(self):
+        if self._old_cache is None:
+            os.environ.pop("XDG_CACHE_HOME", None)
+        else:
+            os.environ["XDG_CACHE_HOME"] = self._old_cache
+        super().tearDown()
+
+    def _write_cached(self, provider_id, ext, size=200):
+        directory = os.path.join(self._tmp, "gnome-web-search-provider", "favicons")
+        os.makedirs(directory, exist_ok=True)
+        path = os.path.join(directory, f"{provider_id}{ext}")
+        with open(path, "wb") as fh:
+            fh.write(b"x" * size)
+        return path
+
+    def test_fallback_names(self):
+        self.assertEqual(self._fallback_icon_name("youtube"), "video-x-generic-symbolic")
+        self.assertEqual(self._fallback_icon_name("google-maps"), "find-location-symbolic")
+        self.assertEqual(self._fallback_icon_name("google"), "web-browser-symbolic")
+        self.assertEqual(self._fallback_icon_name("no-such-provider"), "web-browser-symbolic")
+
+    def test_result_icon_uses_cached_favicon(self):
+        path = self._write_cached("google", ".png")
+        self.assertEqual(self._result_icon("google"), path)
+
+    def test_result_icon_falls_back_without_cache(self):
+        self.assertEqual(self._result_icon("google"), "web-browser-symbolic")
+
+    def test_result_icon_skips_unloadable_format(self):
+        self._write_cached("google", ".webp")
+        self.assertEqual(self._result_icon("google"), "web-browser-symbolic")
+
+
 class TestDbusWire(unittest.TestCase):
     """Round-trips of the pure-stdlib D-Bus marshalling."""
 
@@ -412,6 +472,25 @@ class TestDbusWire(unittest.TestCase):
         tokens = dbus_mod.split_types(signature)
         raw = dbus_mod.pack_types(tokens, values)
         return dbus_mod.unpack_types(tokens, raw)
+
+    def test_array_length_excludes_leading_padding(self):
+        # dbus-broker disconnects peers whose array length covers the
+        # alignment padding before the first element (live "invalid body"
+        # kills once 3+ result metas were returned). Canonical form counts
+        # the elements only: meta1 payload starts at 36 (needs 4 pad bytes
+        # to reach the 8-aligned entry at 40), so its length is 18, not 22.
+        body = dbus_mod.pack_types(
+            ["aa{sv}"],
+            [[{"k": dbus_mod.Variant("s", "XXXX")}, {"k": dbus_mod.Variant("s", "Y")}]],
+        )
+        (outer,) = struct.unpack_from("<I", body, 0)
+        self.assertEqual(outer, len(body) - 4)
+        (inner1,) = struct.unpack_from("<I", body, 32)
+        self.assertEqual(inner1, 18)
+        self.assertEqual(body[32:36], b"\x12\x00\x00\x00")
+        # The canonical bytes still round-trip through our own parser.
+        back = dbus_mod.unpack_types(["aa{sv}"], body)
+        self.assertEqual(len(back[0]), 2)
 
     def test_split_types(self):
         self.assertEqual(dbus_mod.split_types("as"), ["as"])
@@ -486,6 +565,99 @@ class TestDbusWire(unittest.TestCase):
     def test_variant_equality(self):
         self.assertEqual(dbus_mod.Variant("s", "x"), dbus_mod.Variant("s", "x"))
         self.assertNotEqual(dbus_mod.Variant("s", "x"), dbus_mod.Variant("u", 1))
+
+    def test_call_stashes_method_call_during_handshake(self):
+        # dbus-broker forwards a queued activation call before answering
+        # RequestName; _call must stash it instead of raising
+        # "unexpected reply of type 1" (which killed on-demand activation).
+        service = dbus_mod.DBusService("org.test.Service")
+        handler = type("H", (), {"Echo": lambda self, arg: arg})()
+        service.export(
+            "/org/test/Path",
+            "org.test.Interface",
+            handler,
+            {"Echo": ("s", "s")},
+            introspect_xml="<node/>",
+        )
+        client, server = socket.socketpair()
+        try:
+            service._sock = server
+            incoming = dbus_mod.build_message(
+                dbus_mod.MESSAGE_METHOD_CALL,
+                99,
+                {
+                    dbus_mod.FIELD_PATH: dbus_mod.Variant("o", "/org/test/Path"),
+                    dbus_mod.FIELD_INTERFACE: dbus_mod.Variant("s", "org.test.Interface"),
+                    dbus_mod.FIELD_MEMBER: dbus_mod.Variant("s", "Echo"),
+                    dbus_mod.FIELD_SIGNATURE: dbus_mod.Variant("g", "s"),
+                },
+                dbus_mod.pack_types(["s"], ["ping"]),
+            )
+            reply = dbus_mod.build_message(
+                dbus_mod.MESSAGE_METHOD_RETURN,
+                50,
+                {
+                    dbus_mod.FIELD_REPLY_SERIAL: dbus_mod.Variant("u", 2),
+                    dbus_mod.FIELD_SIGNATURE: dbus_mod.Variant("g", "s"),
+                },
+                dbus_mod.pack_types(["s"], ["hello"]),
+            )
+            client.sendall(incoming + reply)
+            result = service._call(
+                "org.freedesktop.DBus",
+                "/org/freedesktop/DBus",
+                "org.freedesktop.DBus",
+                "Hello",
+                "",
+                [],
+            )
+            self.assertEqual(result, ["hello"])
+            self.assertEqual(len(service._pending_calls), 1)
+            call_serial, _fields, pending_body = service._pending_calls[0]
+            self.assertEqual(call_serial, 99)
+            self.assertEqual(dbus_mod.unpack_types(["s"], pending_body), ["ping"])
+        finally:
+            client.close()
+            server.close()
+
+    def test_run_answers_pending_calls(self):
+        service = dbus_mod.DBusService("org.test.Service")
+        handler = type("H", (), {"Echo": lambda self, arg: arg})()
+        service.export(
+            "/org/test/Path",
+            "org.test.Interface",
+            handler,
+            {"Echo": ("s", "s")},
+            introspect_xml="<node/>",
+        )
+        client, server = socket.socketpair()
+        try:
+            service._sock = server
+            service._stop.set()
+            service._pending_calls = [
+                (
+                    99,
+                    {
+                        dbus_mod.FIELD_PATH: "/org/test/Path",
+                        dbus_mod.FIELD_INTERFACE: "org.test.Interface",
+                        dbus_mod.FIELD_MEMBER: "Echo",
+                    },
+                    dbus_mod.pack_types(["s"], ["ping"]),
+                )
+            ]
+            service.run()
+            incoming = dbus_mod.read_message(client)
+            self.assertIsNotNone(incoming)
+            mtype, _serial, reply_fields, reply_body = incoming
+            self.assertEqual(mtype, dbus_mod.MESSAGE_METHOD_RETURN)
+            self.assertEqual(reply_fields[dbus_mod.FIELD_REPLY_SERIAL], 99)
+            self.assertEqual(dbus_mod.unpack_types(["s"], reply_body), ["ping"])
+        finally:
+            client.close()
+            try:
+                server.close()
+            except OSError:
+                pass
 
     def test_dispatch_replies_with_call_serial(self):
         service = dbus_mod.DBusService("org.test.Service")
