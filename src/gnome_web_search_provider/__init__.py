@@ -22,7 +22,7 @@ from typing import Dict, List, Tuple
 from .config import DEFAULT_BROWSER, ConfigManager
 from .dbus import DBusService, Variant
 from . import favicons as _favicons
-from .providers import PROVIDERS, SearchProvider, fallback_icon_name
+from .providers import PROVIDERS, SearchProvider, all_providers, fallback_icon_name
 
 try:
     from .i18n import tr
@@ -48,20 +48,29 @@ RESULT_SEPARATOR = "\u241f"
 _LOADABLE_FAVICON_EXTS = (".png", ".ico", ".svg", ".jpg", ".jpeg", ".gif")
 
 
-def _result_icon(provider_id: str) -> str:
-    """Cached favicon path for ``provider_id`` or a themed fallback name.
+def _result_icon(provider: SearchProvider) -> str:
+    """Cached favicon path for ``provider`` or a themed fallback name.
 
     GNOME Shell turns this ``gicon`` string into a FileIcon (absolute
     path) or a ThemedIcon (icon name) via ``icon_new_for_string`` — the
     same two sources the preferences window shows.
+
+    A user-chosen custom icon file always wins; then the downloaded
+    favicon cache; then the themed fallback so results never end up
+    with a broken image.
     """
+    import os
+
+    custom = getattr(provider, "icon_path", "")
+    if custom and os.path.isfile(custom):
+        return custom
     try:
-        cached = _favicons.cached_icon_path(provider_id)
+        cached = _favicons.cached_icon_path(provider.provider_id)
     except Exception:
         cached = None
     if cached and cached.lower().endswith(_LOADABLE_FAVICON_EXTS):
         return cached
-    return fallback_icon_name(provider_id)
+    return fallback_icon_name(provider.provider_id)
 
 # Method name -> (input signature, output signature).  Output ``None``
 # means a void reply.  This table drives the pure-stdlib D-Bus dispatch.
@@ -110,12 +119,25 @@ class WebSearchProvider(object):
         self._config = config if config is not None else ConfigManager()
         self._providers = providers if providers is not None else PROVIDERS
 
+    def _all_providers(self) -> Dict[str, SearchProvider]:
+        try:
+            custom_items = self._config.get_custom_providers()
+        except AttributeError:
+            custom_items = []
+        except Exception:
+            custom_items = []
+        combined = dict(self._providers)
+        if custom_items:
+            combined.update(all_providers(custom_items))
+        return combined
+
     # ------------------------------------------------------------- helpers
 
     def _enabled_ids(self) -> List[str]:
         """Provider ids currently enabled, filtered to known providers."""
         enabled = self._config.get_enabled_providers()
-        return [pid for pid in enabled if pid in self._providers]
+        known = self._all_providers()
+        return [pid for pid in enabled if pid in known]
 
     def _result_ids(self, query: str) -> List[str]:
         return [f"{pid}{RESULT_SEPARATOR}{query}" for pid in self._enabled_ids()]
@@ -152,9 +174,10 @@ class WebSearchProvider(object):
 
     def GetResultMetas(self, results: List[str]) -> List[Dict[str, Variant]]:
         metas = []
+        known = self._all_providers()
         for result in results:
             provider_id, query = self._split_result(result)
-            provider = self._providers.get(provider_id)
+            provider = known.get(provider_id)
             if provider is None:
                 continue
             metas.append(
@@ -164,14 +187,14 @@ class WebSearchProvider(object):
                         "s", tr("search_for", provider=provider.name, query=query)
                     ),
                     "description": Variant("s", tr("press_enter")),
-                    "gicon": Variant("s", _result_icon(provider_id)),
+                    "gicon": Variant("s", _result_icon(provider)),
                 }
             )
         return metas
 
     def ActivateResult(self, result: str, terms: List[str], timestamp: int):
         provider_id, query = self._split_result(result)
-        provider = self._providers.get(provider_id)
+        provider = self._all_providers().get(provider_id)
         if provider is None:
             return
         self._open_url(provider.build_url(query))
@@ -179,10 +202,11 @@ class WebSearchProvider(object):
     def LaunchSearch(self, terms: List[str], timestamp: int):
         # "Search the web" from the overview: open the first enabled
         # provider with the typed query in the configured browser.
+        known = self._all_providers()
         ids = self._enabled_ids()
         if not ids:
             return
-        provider = self._providers[ids[0]]
+        provider = known[ids[0]]
         self._open_url(provider.build_url(" ".join(terms)))
 
 
