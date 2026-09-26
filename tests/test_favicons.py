@@ -131,12 +131,54 @@ class TestFavicons(unittest.TestCase):
         self.assertEqual(favicons.icon_domain("brave", "https://search.brave.com/x"), "brave.com")
         self.assertEqual(
             favicons.icon_domain("hackernews", "https://hn.algolia.com/?q=x"),
-            "ycombinator.com",
+            "news.ycombinator.com",
         )
         self.assertEqual(
             favicons.icon_domain("google", "https://www.google.com/search?q=x"),
             "www.google.com",
         )
+
+    def test_icon_domains_tries_search_domain_first(self):
+        domains = favicons.icon_domains("hackernews", "https://hn.algolia.com/?q=x")
+        self.assertEqual(domains[0], "hn.algolia.com")
+        self.assertIn("news.ycombinator.com", domains)
+
+    def test_parse_icon_links_prefers_biggest(self):
+        html = (
+            '<link rel="icon" href="/icon16.png" sizes="16x16">'
+            '<link rel="icon" href="/icon128.png" sizes="128x128">'
+            '<link rel="shortcut icon" href="/favicon.ico">'
+        )
+        links = favicons.parse_icon_links(html, "https://example.com/")
+        self.assertEqual(links[0], "https://example.com/icon128.png")
+        self.assertIn("https://example.com/favicon.ico", links)
+
+    def test_octet_stream_icon_accepted_by_magic(self):
+        body = b"\x00\x00\x01\x00" + b"x" * 500
+        with patch.object(
+            favicons.urllib.request,
+            "urlopen",
+            return_value=_FakeResponse(body, "application/octet-stream"),
+        ):
+            path = favicons.fetch_favicon("kagi", "https://kagi.com/search?q={query}")
+        self.assertIsNotNone(path)
+
+    def test_external_fallback_used_when_direct_fails(self):
+        png = b"\x89PNG\r\n" + b"x" * 500
+        calls = []
+
+        def _fake(urlopen_request, timeout=None):
+            url = urlopen_request.full_url
+            calls.append(url)
+            if "google.com/s2/favicons" in url or "icons.duckduckgo.com" in url:
+                return _FakeResponse(png, "image/png")
+            raise OSError("blocked")
+
+        with patch.object(favicons.urllib.request, "urlopen", side_effect=_fake):
+            with patch.object(favicons, "discover_icon_links", return_value=[]):
+                path = favicons.fetch_favicon("yep", "https://yep.com/search?q={query}")
+        self.assertIsNotNone(path)
+        self.assertTrue(any("google.com/s2/favicons" in url for url in calls))
 
 
 if __name__ == "__main__":
