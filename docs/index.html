@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Search Provider — Pesquise na web sem sair do GNOME</title>
+<meta name="description" content="Aperte Super, digite e ache. Pesquise no Google, YouTube, Wikipedia e outros 49 sites direto da busca do GNOME. Instalação em 30 segundos. Grátis.">
+<meta property="og:title" content="Web Search Provider para GNOME">
+<meta property="og:description" content="Aperte Super, digite, ache. 49 sites na busca do GNOME. Instale com 1 comando.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#242424">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"GNOME Web Search Provider","applicationCategory":"UtilitiesApplication","operatingSystem":"Linux","offers":{"@type":"Offer","price":"0"},"inLanguage":["pt-BR","en","es"]}
+</script>
+<style>
+:root{
+  --blue:#3584e4; --blue-dark:#1c71d8; --blue-light:#e8f1fd;
+  --bg:#f6f5f4; --card:#ffffff; --dark:#242424; --dark2:#2e3436;
+  --text:#2e3436; --muted:#5e5c64; --border:#deddda; --green:#33d17a; --radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Cantarell","Ubuntu","Inter",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--blue-dark)}
+/* GNOME top bar mock */
+.topbar{background:#000;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:.45rem 1rem;font-size:.85rem}
+.topbar .pill{background:rgba(255,255,255,.14);border-radius:999px;padding:.15rem .9rem;font-weight:600}
+/* nav */
+nav{position:sticky;top:0;z-index:50;background:rgba(246,245,244,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.nav-inner{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.2rem;gap:.8rem}
+.brand{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.02rem;text-decoration:none;color:var(--text)}
+.brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--blue),#1a5fb4);display:grid;place-items:center;font-size:1.1rem;box-shadow:0 4px 14px rgba(53,132,228,.35)}
+.langs{display:flex;gap:.3rem;background:#e9e8e6;border-radius:999px;padding:.2rem}
+.langs button{border:0;background:transparent;padding:.35rem .8rem;border-radius:999px;font-weight:700;font-size:.82rem;cursor:pointer;color:var(--muted)}
+.langs button.active{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.btn{display:inline-flex;align-items:center;gap:.5rem;border:0;cursor:pointer;text-decoration:none;font-weight:800;border-radius:10px;padding:.85rem 1.5rem;font-size:1rem;transition:transform .12s ease,box-shadow .12s ease}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 6px 20px rgba(53,132,228,.35)}
+.btn-primary:hover{background:var(--blue-dark);transform:translateY(-1px)}
+.btn-ghost{background:#fff;color:var(--text);border:1px solid var(--border)}
+.btn-sm{padding:.55rem 1rem;font-size:.88rem}
+/* hero */
+.hero{background:var(--dark);color:#fff;overflow:hidden}
+.hero-inner{max-width:1080px;margin:0 auto;padding:3.5rem 1.2rem 3rem;display:grid;gap:2rem}
+@media(min-width:900px){.hero-inner{grid-template-columns:1.05fr .95fr;align-items:center;padding:4.5rem 1.2rem}}
+.badge{display:inline-flex;align-items:center;gap:.45rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:.3rem .9rem;font-size:.82rem;font-weight:600;color:#e6e6e6}
+.badge .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+h1{font-size:clamp(2rem,5vw,3.2rem);line-height:1.08;letter-spacing:-.02em;margin:1rem 0 .8rem}
+h1 .hl{color:#8ab4f8}
+.lead{color:#c9c9c9;font-size:clamp(1.02rem,2.4vw,1.22rem);max-width:34rem}
+.install-box{margin-top:1.4rem;background:#1a1a1a;border:1px solid rgba(255,255,255,.14);border-radius:var(--radius);overflow:hidden}
+.install-label{display:flex;justify-content:space-between;align-items:center;padding:.6rem .9rem;font-size:.78rem;color:#aaa;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.install-label .ok{color:var(--green)}
+.cmd{display:flex;align-items:center;gap:.6rem;padding:.4rem .9rem 1rem}
+.cmd code{flex:1;font-family:ui-monospace,"Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;font-size:.82rem;background:#000;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:.8rem .9rem;color:#9ae6b4;overflow-x:auto;white-space:nowrap}
+.copy{flex-shrink:0;background:var(--blue);color:#fff;border:0;border-radius:8px;padding:.8rem 1rem;font-weight:800;cursor:pointer;font-size:.85rem}
+.copy:hover{background:var(--blue-dark)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:1.1rem}
+.hero-note{font-size:.85rem;color:#9a9996;margin-top:.7rem}
+/* overview mock */
+.mock{background:#000;border:1px solid rgba(255,255,255,.18);border-radius:16px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.mock-bar{display:flex;justify-content:center;padding:.5rem;background:#111;font-size:.75rem;color:#ddd}
+.search-big{margin:1.6rem auto 0;width:min(88%,420px);background:#fff;color:#333;border-radius:999px;padding:.8rem 1.2rem;display:flex;gap:.6rem;align-items:center;font-size:.95rem;box-shadow:0 8px 30px rgba(53,132,228,.45)}
+.results{padding:1rem;display:grid;gap:.55rem}
+.result{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:.65rem .9rem;display:flex;gap:.7rem;align-items:center;font-size:.88rem}
+.result .ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:800;color:#fff;flex-shrink:0}
+.result small{display:block;color:#b5b5b5;font-size:.75rem}
+.result.enter{border-color:var(--blue);background:rgba(53,132,228,.18)}
+kbd{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-bottom-width:2px;border-radius:6px;padding:.05rem .45rem;font-family:inherit;font-size:.78rem}
+/* sections */
+section{max-width:1080px;margin:0 auto;padding:3rem 1.2rem}
+.sec-title{font-size:clamp(1.5rem,3.5vw,2.1rem);letter-spacing:-.01em;line-height:1.2;text-align:center}
+.sec-sub{color:var(--muted);text-align:center;max-width:36rem;margin:.6rem auto 0;font-size:1.02rem}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-top:1.8rem;text-align:center}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem .6rem}
+.stat b{display:block;font-size:clamp(1.4rem,4vw,2rem);color:var(--blue-dark)}
+.stat span{font-size:.85rem;color:var(--muted)}
+.steps{display:grid;gap:.9rem;margin-top:1.8rem}
+@media(min-width:800px){.steps{grid-template-columns:repeat(3,1fr)}}
+.step{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem;text-align:center}
+.step .n{width:40px;height:40px;border-radius:50%;background:var(--blue-light);color:var(--blue-dark);font-weight:800;display:grid;place-items:center;margin:0 auto .7rem;font-size:1.1rem}
+.step kbd{background:#e9e8e6;border-color:#cfcbc6;color:var(--text)}
+.grid4{display:grid;gap:.9rem;margin-top:1.8rem}
+@media(min-width:800px){.grid4{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1000px){.grid4{grid-template-columns:repeat(4,1fr)}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem}
+.card .emoji{font-size:1.7rem}
+.card h3{margin:.5rem 0 .35rem;font-size:1.02rem}
+.card p{font-size:.9rem;color:var(--muted)}
+/* install section */
+.install-sec{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:2rem 1.4rem;box-shadow:0 12px 40px rgba(0,0,0,.07)}
+@media(min-width:800px){.install-sec{padding:2.6rem}}
+.cmd-light{display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap}
+.cmd-light code{flex:1;min-width:260px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;background:var(--dark);color:#9ae6b4;border-radius:10px;padding:.9rem 1rem;overflow-x:auto;white-space:nowrap}
+.after{margin-top:1.2rem;display:grid;gap:.6rem;font-size:.93rem}
+.after li{list-style:none;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.7rem .95rem}
+details{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem;margin-top:.7rem}
+summary{font-weight:700;cursor:pointer}
+details p{font-size:.92rem;color:var(--muted);margin-top:.4rem}
+.final{background:linear-gradient(135deg,#1a5fb4,var(--blue));color:#fff;border-radius:18px;text-align:center;padding:3rem 1.5rem;margin-top:1rem}
+.final h2{font-size:clamp(1.6rem,4vw,2.3rem);letter-spacing:-.01em}
+.final p{opacity:.9;margin:.6rem auto 1.4rem;max-width:30rem}
+.final .btn-primary{background:#fff;color:#1a5fb4;box-shadow:none}
+footer{border-top:1px solid var(--border);margin-top:3rem;padding:1.6rem 1.2rem;text-align:center;color:var(--muted);font-size:.85rem}
+footer a{color:var(--blue-dark);text-decoration:none;font-weight:600}
+.toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:#fff;padding:.7rem 1.3rem;border-radius:999px;font-size:.88rem;font-weight:700;opacity:0;pointer-events:none;transition:.25s;z-index:99}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="topbar"><span data-i18n="topbar_left">Atividades</span><span class="pill" data-i18n="topbar_mid">✦ GNOME Web Search Provider</span><span data-i18n="topbar_right">grátis • open source</span></div>
+
+<nav>
+  <div class="nav-inner">
+    <a class="brand" href="#"><span class="logo">🔍</span><span data-i18n="brand">Web Search Provider</span></a>
+    <div style="display:flex;gap:.6rem;align-items:center">
+      <div class="langs" role="group" aria-label="Language">
+        <button data-lang="pt" class="active">PT</button>
+        <button data-lang="en">EN</button>
+        <button data-lang="es">ES</button>
+      </div>
+      <a href="#instalar" class="btn btn-primary btn-sm" data-i18n="nav_cta">Instalar grátis</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div>
+      <span class="badge"><span class="dot"></span><span data-i18n="badge">Para GNOME Shell • Grátis • Código aberto</span></span>
+      <h1 data-i18n="h1">Aperte <span class="hl">Super</span>, digite, ache. Simples assim.</h1>
+      <p class="lead" data-i18n="lead">Pesquise no Google, YouTube, Wikipedia e outros 49 sites direto da barra de pesquisa do GNOME. Sem abrir o navegador antes. Sem quebrar seu fluxo.</p>
+      <div class="install-box">
+        <div class="install-label"><span data-i18n="install_label">⚡ Copie, cole no terminal, pronto</span><span class="ok">● <span data-i18n="install_time">30 segundos</span></span></div>
+        <div class="cmd">
+          <code id="oneline">curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/install-local.sh | sh</code>
+          <button class="copy" onclick="copyCmd(this)" data-i18n="copy">Copiar</button>
+        </div>
+      </div>
+      <div class="hero-cta">
+        <a href="#instalar" class="btn btn-primary" data-i18n="cta_main">⚡ Quero pesquisar mais rápido</a>
+        <a href="#como" class="btn btn-ghost" data-i18n="cta_how">Ver como funciona</a>
+      </div>
+      <p class="hero-note" data-i18n="hero_note">Sem senha de root obrigatória • Funciona no Ubuntu, Fedora, Debian, Arch e derivados</p>
+    </div>
+    <div class="mock" aria-hidden="true">
+      <div class="mock-bar"><span data-i18n="mock_bar">Atividades &nbsp;—&nbsp; Visão geral</span></div>
+      <div class="search-big">🔍 <span id="mock-q">receita de pão de queijo</span><span style="margin-left:auto;color:#999">⌫</span></div>
+      <div class="results">
+        <div class="result enter"><span class="ic" style="background:#4285F4">G</span><span><span data-i18n="r1">Pesquisar no Google por…</span><small>↵ <span data-i18n="r_open">abrir no navegador</span></small></span><kbd style="margin-left:auto">↵</kbd></div>
+        <div class="result"><span class="ic" style="background:#FF0000">▶</span><span><span data-i18n="r2">Pesquisar no YouTube por…</span><small>videos • tutoriais</small></span></div>
+        <div class="result"><span class="ic" style="background:#000">W</span><span><span data-i18n="r3">Pesquisar na Wikipédia por…</span><small>artigos • referência</small></span></div>
+        <div class="result"><span class="ic" style="background:#ff4500">r/</span><span><span data-i18n="r4">Pesquisar no Reddit por…</span><small>opiniões reais</small></span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <h2 class="sec-title" data-i18n="stats_title">Você pesquisa na web dezenas de vezes por dia. Economize cada uma delas.</h2>
+  <div class="stats">
+    <div class="stat"><b>49</b><span data-i18n="s1">sites direto na busca do GNOME</span></div>
+    <div class="stat"><b>30s</b><span data-i18n="s2">para instalar com 1 comando</span></div>
+    <div class="stat"><b>0</b><span data-i18n="s3">dependências extras. Leve e grátis.</span></div>
+  </div>
+</section>
+
+<section id="como" style="padding-top:0">
+  <h2 class="sec-title" data-i18n="how_title">Funciona do jeito que você já usa o GNOME</h2>
+  <p class="sec-sub" data-i18n="how_sub">Nada de app novo para aprender. É a busca que você já conhece — turbinada.</p>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h3><kbd>Super</kbd></h3><p data-i18n="st1">Aperte a tecla Super como você já faz todo dia.</p></div>
+    <div class="step"><div class="n">2</div><h3 data-i18n="st2t">Digite qualquer coisa</h3><p data-i18n="st2">Cada site ativado aparece como uma opção de busca.</p></div>
+    <div class="step"><div class="n">3</div><h3><kbd>Enter</kbd></h3><p data-i18n="st3">O resultado abre direto no seu navegador. Pronto.</p></div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <h2 class="sec-title" data-i18n="ben_title">Por que quem instala não tira mais</h2>
+  <div class="grid4">
+    <div class="card"><div class="emoji">⚡</div><h3 data-i18n="b1t">Fluxo sem interrupção</h3><p data-i18n="b1">Sem abrir navegador, sem nova aba, sem Ctrl+T. A pesquisa vai até você.</p></div>
+    <div class="card"><div class="emoji">🎛️</div><h3 data-i18n="b2t">Só os sites que você usa</h3><p data-i18n="b2">Ligue Google, YouTube, GitHub, Spotify… desligue o resto. Tudo numa telinha simples.</p></div>
+    <div class="card"><div class="emoji">🪶</div><h3 data-i18n="b3t">Leve de verdade</h3><p data-i18n="b3">Só Python, sem pacotes extras. Não pesa no boot, não roda em segundo plano à toa.</p></div>
+    <div class="card"><div class="emoji">🔓</div><h3 data-i18n="b4t">Grátis e aberto</h3><p data-i18n="b4">Código aberto (MIT). Sem conta, sem telemetria, sem pegadinha. É seu.</p></div>
+  </div>
+</section>
+
+<section id="instalar" style="padding-top:0">
+  <div class="install-sec">
+    <h2 class="sec-title" data-i18n="ins_title">Instale agora em 30 segundos</h2>
+    <p class="sec-sub" data-i18n="ins_sub">Um comando. Depois é só sair e entrar de novo. Sem compilar nada, sem dor de cabeça.</p>
+    <div class="cmd-light">
+      <code id="oneline2">curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/install-local.sh | sh</code>
+      <button class="copy" onclick="copyCmd2()" data-i18n="copy">Copiar</button>
+    </div>
+    <ul class="after">
+      <li><b>1.</b> <span data-i18n="a1">Cole o comando no terminal e aperte Enter.</span></li>
+      <li><b>2.</b> <span data-i18n="a2">Saia e entre novamente (para o GNOME descobrir o buscador).</span></li>
+      <li><b>3.</b> <span data-i18n="a3">Aperte Super, digite algo e escolha onde pesquisar. 🎉</span></li>
+    </ul>
+    <details><summary data-i18n="f1q">Preciso ser root / usar sudo?</summary><p data-i18n="f1a">Não. O instalador usa sua pasta pessoal (~/.local). Ele só pede sudo uma vez para registrar o buscador no sistema — sem isso o GNOME não o enxerga.</p></details>
+    <details><summary data-i18n="f2q">Funciona na minha distro?</summary><p data-i18n="f2a">Se você usa GNOME Shell (Ubuntu, Fedora, Debian, Arch, Pop!_OS…), sim. Só precisa de Python 3.8+ — que já vem instalado.</p></details>
+    <details><summary data-i18n="f3q">É realmente grátis?</summary><p data-i18n="f3a">Sim, licença MIT, código aberto no GitHub. Sem conta, sem anúncios, sem rastreamento.</p></details>
+  </div>
+  <div class="final">
+    <h2 data-i18n="final_t">Sua próxima pesquisa pode levar 2 segundos.</h2>
+    <p data-i18n="final_s">Junte-se a quem transformou a tecla Super no Google do desktop.</p>
+    <button class="btn btn-primary" onclick="copyCmd2()" data-i18n="final_cta">📋 Copiar comando de instalação</button>
+  </div>
+</section>
+
+<footer>
+  <p><b>GNOME Web Search Provider</b> — <span data-i18n="foot">feito com 💙 para a comunidade GNOME</span> • MIT • <a href="https://github.com/zonaro/gnome-web-search-provider">GitHub</a></p>
+</footer>
+
+<div class="toast" id="toast">✅</div>
+
+<script>
+var CMD = "curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/install-local.sh | sh";
+var I18N = {
+pt: {
+  topbar_left:"Atividades", topbar_mid:"✦ GNOME Web Search Provider", topbar_right:"grátis • open source",
+  brand:"Web Search Provider", nav_cta:"Instalar grátis",
+  badge:"Para GNOME Shell • Grátis • Código aberto",
+  h1:'Aperte <span class="hl">Super</span>, digite, ache. Simples assim.',
+  lead:"Pesquise no Google, YouTube, Wikipedia e outros 49 sites direto da barra de pesquisa do GNOME. Sem abrir o navegador antes. Sem quebrar seu fluxo.",
+  install_label:"⚡ Copie, cole no terminal, pronto", install_time:"30 segundos", copy:"Copiar",
+  cta_main:"⚡ Quero pesquisar mais rápido", cta_how:"Ver como funciona",
+  hero_note:"Sem senha de root obrigatória • Funciona no Ubuntu, Fedora, Debian, Arch e derivados",
+  mock_bar:"Atividades — Visão geral",
+  r1:"Pesquisar no Google por…", r2:"Pesquisar no YouTube por…", r3:"Pesquisar na Wikipédia por…", r4:"Pesquisar no Reddit por…", r_open:"abrir no navegador",
+  stats_title:"Você pesquisa na web dezenas de vezes por dia. Economize cada uma delas.",
+  s1:"sites direto na busca do GNOME", s2:"para instalar com 1 comando", s3:"dependências extras. Leve e grátis.",
+  how_title:"Funciona do jeito que você já usa o GNOME", how_sub:"Nada de app novo para aprender. É a busca que você já conhece — turbinada.",
+  st1:"Aperte a tecla Super como você já faz todo dia.", st2t:"Digite qualquer coisa", st2:"Cada site ativado aparece como uma opção de busca.", st3:"O resultado abre direto no seu navegador. Pronto.",
+  ben_title:"Por que quem instala não tira mais",
+  b1t:"Fluxo sem interrupção", b1:"Sem abrir navegador, sem nova aba, sem Ctrl+T. A pesquisa vai até você.",
+  b2t:"Só os sites que você usa", b2:"Ligue Google, YouTube, GitHub, Spotify… desligue o resto. Tudo numa telinha simples.",
+  b3t:"Leve de verdade", b3:"Só Python, sem pacotes extras. Não pesa no boot, não roda em segundo plano à toa.",
+  b4t:"Grátis e aberto", b4:"Código aberto (MIT). Sem conta, sem telemetria, sem pegadinha. É seu.",
+  ins_title:"Instale agora em 30 segundos", ins_sub:"Um comando. Depois é só sair e entrar de novo. Sem compilar nada, sem dor de cabeça.",
+  a1:"Cole o comando no terminal e aperte Enter.", a2:"Saia e entre novamente (para o GNOME descobrir o buscador).", a3:"Aperte Super, digite algo e escolha onde pesquisar. 🎉",
+  f1q:"Preciso ser root / usar sudo?", f1a:"Não. O instalador usa sua pasta pessoal (~/.local). Ele só pede sudo uma vez para registrar o buscador no sistema — sem isso o GNOME não o enxerga.",
+  f2q:"Funciona na minha distro?", f2a:"Se você usa GNOME Shell (Ubuntu, Fedora, Debian, Arch, Pop!_OS…), sim. Só precisa de Python 3.8+ — que já vem instalado.",
+  f3q:"É realmente grátis?", f3a:"Sim, licença MIT, código aberto no GitHub. Sem conta, sem anúncios, sem rastreamento.",
+  final_t:"Sua próxima pesquisa pode levar 2 segundos.", final_s:"Junte-se a quem transformou a tecla Super no Google do desktop.", final_cta:"📋 Copiar comando de instalação",
+  foot:"feito com 💙 para a comunidade GNOME", toast:"✅ Comando copiado! Cole no terminal e dê Enter",
+  mock_q:["receita de pão de queijo","passagem barata pra salvador","como centralizar div em css","letra daquela música…"]
+},
+en: {
+  topbar_left:"Activities", topbar_mid:"✦ GNOME Web Search Provider", topbar_right:"free • open source",
+  brand:"Web Search Provider", nav_cta:"Install free",
+  badge:"For GNOME Shell • Free • Open source",
+  h1:'Press <span class="hl">Super</span>, type, find. That simple.',
+  lead:"Search Google, YouTube, Wikipedia and 49 more sites right from the GNOME search bar. No browser to open first. No broken flow.",
+  install_label:"⚡ Copy, paste in terminal, done", install_time:"30 seconds", copy:"Copy",
+  cta_main:"⚡ I want faster search", cta_how:"See how it works",
+  hero_note:"No mandatory root password • Works on Ubuntu, Fedora, Debian, Arch and derivatives",
+  mock_bar:"Activities — Overview",
+  r1:"Search Google for…", r2:"Search YouTube for…", r3:"Search Wikipedia for…", r4:"Search Reddit for…", r_open:"open in browser",
+  stats_title:"You search the web dozens of times a day. Save every single one.",
+  s1:"sites right in GNOME search", s2:"to install with 1 command", s3:"extra dependencies. Lightweight and free.",
+  how_title:"Works the way you already use GNOME", how_sub:"No new app to learn. It's the search you know — supercharged.",
+  st1:"Press the Super key like you already do every day.", st2t:"Type anything", st2:"Every enabled site shows up as a search option.", st3:"The result opens straight in your browser. Done.",
+  ben_title:"Why nobody uninstalls it",
+  b1t:"Uninterrupted flow", b1:"No opening a browser, no new tab, no Ctrl+T. Search comes to you.",
+  b2t:"Only the sites you use", b2:"Turn on Google, YouTube, GitHub, Spotify… turn off the rest. All in one tiny screen.",
+  b3t:"Truly lightweight", b3:"Just Python, no extra packages. No boot weight, no background waste.",
+  b4t:"Free and open", b4:"Open source (MIT). No account, no telemetry, no catch. It's yours.",
+  ins_title:"Install now in 30 seconds", ins_sub:"One command. Then just log out and back in. Nothing to compile, no headache.",
+  a1:"Paste the command in the terminal and hit Enter.", a2:"Log out and back in (so GNOME discovers the provider).", a3:"Press Super, type something and pick where to search. 🎉",
+  f1q:"Do I need root / sudo?", f1a:"No. The installer uses your home folder (~/.local). It only asks for sudo once to register the provider system-wide — without that, GNOME can't see it.",
+  f2q:"Does it work on my distro?", f2a:"If you run GNOME Shell (Ubuntu, Fedora, Debian, Arch, Pop!_OS…), yes. You only need Python 3.8+, which is already installed.",
+  f3q:"Is it really free?", f3a:"Yes, MIT licensed, open source on GitHub. No account, no ads, no tracking.",
+  final_t:"Your next search could take 2 seconds.", final_s:"Join everyone who turned the Super key into the desktop's Google.", final_cta:"📋 Copy install command",
+  foot:"made with 💙 for the GNOME community", toast:"✅ Command copied! Paste it in the terminal and hit Enter",
+  mock_q:["cheap flights to lisbon","how to center a div in css","best pizza dough recipe","lyrics of that song…"]
+},
+es: {
+  topbar_left:"Actividades", topbar_mid:"✦ GNOME Web Search Provider", topbar_right:"gratis • código abierto",
+  brand:"Web Search Provider", nav_cta:"Instalar gratis",
+  badge:"Para GNOME Shell • Gratis • Código abierto",
+  h1:'Pulsa <span class="hl">Super</span>, escribe, encuentra. Así de simple.',
+  lead:"Busca en Google, YouTube, Wikipedia y otros 49 sitios directo desde la barra de búsqueda de GNOME. Sin abrir el navegador antes. Sin romper tu ritmo.",
+  install_label:"⚡ Copia, pega en la terminal, listo", install_time:"30 segundos", copy:"Copiar",
+  cta_main:"⚡ Quiero buscar más rápido", cta_how:"Ver cómo funciona",
+  hero_note:"Sin contraseña de root obligatoria • Funciona en Ubuntu, Fedora, Debian, Arch y derivados",
+  mock_bar:"Actividades — Vista general",
+  r1:"Buscar en Google…", r2:"Buscar en YouTube…", r3:"Buscar en Wikipedia…", r4:"Buscar en Reddit…", r_open:"abrir en el navegador",
+  stats_title:"Buscas en la web decenas de veces al día. Ahorra cada una.",
+  s1:"sitios directo en la búsqueda de GNOME", s2:"para instalar con 1 comando", s3:"dependencias extra. Ligero y gratis.",
+  how_title:"Funciona como ya usas GNOME", how_sub:"Nada nuevo que aprender. Es la búsqueda que conoces — potenciada.",
+  st1:"Pulsa la tecla Super como ya haces cada día.", st2t:"Escribe lo que sea", st2:"Cada sitio activado aparece como opción de búsqueda.", st3:"El resultado se abre directo en tu navegador. Listo.",
+  ben_title:"Por qué nadie lo desinstala",
+  b1t:"Flujo sin interrupciones", b1:"Sin abrir navegador, sin pestaña nueva, sin Ctrl+T. La búsqueda viene a ti.",
+  b2t:"Solo los sitios que usas", b2:"Activa Google, YouTube, GitHub, Spotify… apaga el resto. Todo en una pantallita simple.",
+  b3t:"Ligero de verdad", b3:"Solo Python, sin paquetes extra. No pesa al arrancar, no gasta recursos en segundo plano.",
+  b4t:"Gratis y abierto", b4:"Código abierto (MIT). Sin cuenta, sin telemetría, sin truco. Es tuyo.",
+  ins_title:"Instala ahora en 30 segundos", ins_sub:"Un comando. Después solo cierra sesión y vuelve a entrar. Nada que compilar, sin dolores de cabeza.",
+  a1:"Pega el comando en la terminal y pulsa Enter.", a2:"Cierra sesión y vuelve a entrar (para que GNOME descubra el buscador).", a3:"Pulsa Super, escribe algo y elige dónde buscar. 🎉",
+  f1q:"¿Necesito root / sudo?", f1a:"No. El instalador usa tu carpeta personal (~/.local). Solo pide sudo una vez para registrar el buscador en el sistema — sin eso, GNOME no lo ve.",
+  f2q:"¿Funciona en mi distro?", f2a:"Si usas GNOME Shell (Ubuntu, Fedora, Debian, Arch, Pop!_OS…), sí. Solo necesitas Python 3.8+, que ya viene instalado.",
+  f3q:"¿Es realmente gratis?", f3a:"Sí, licencia MIT, código abierto en GitHub. Sin cuenta, sin anuncios, sin rastreo.",
+  final_t:"Tu próxima búsqueda puede tardar 2 segundos.", final_s:"Únete a quienes convirtieron la tecla Super en el Google del escritorio.", final_cta:"📋 Copiar comando de instalación",
+  foot:"hecho con 💙 para la comunidad GNOME", toast:"✅ ¡Comando copiado! Pégalo en la terminal y pulsa Enter",
+  mock_q:["vuelos baratos a madrid","cómo centrar un div en css","receta de tortilla española","letra de esa canción…"]
+}};
+var lang = localStorage.getItem("gwsp-lang") || (navigator.language||"pt").slice(0,2);
+if(!I18N[lang]) lang = "pt";
+function setLang(l){
+  lang = I18N[l] ? l : "pt";
+  localStorage.setItem("gwsp-lang", lang);
+  document.documentElement.lang = lang === "pt" ? "pt-BR" : lang;
+  document.querySelectorAll("[data-i18n]").forEach(function(el){
+    var k = el.getAttribute("data-i18n");
+    if(I18N[lang][k] !== undefined) el.innerHTML = I18N[lang][k];
+  });
+  document.querySelectorAll(".langs button").forEach(function(b){
+    b.classList.toggle("active", b.dataset.lang === lang);
+  });
+  document.title = {pt:"Web Search Provider — Pesquise na web sem sair do GNOME",en:"Web Search Provider — Search the web without leaving GNOME",es:"Web Search Provider — Busca en la web sin salir de GNOME"}[lang];
+}
+document.querySelectorAll(".langs button").forEach(function(b){
+  b.addEventListener("click", function(){ setLang(b.dataset.lang); });
+});
+setLang(lang);
+// rotating demo queries (conversion flavor, non-technical)
+var qi = 0;
+setInterval(function(){
+  var qs = I18N[lang].mock_q; qi = (qi+1) % qs.length;
+  document.getElementById("mock-q").textContent = qs[qi];
+}, 2600);
+function toast(msg){
+  var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show");
+  setTimeout(function(){ t.classList.remove("show"); }, 2200);
+}
+function copyCmd(){ navigator.clipboard.writeText(CMD).then(function(){ toast(I18N[lang].toast); }); }
+function copyCmd2(){ navigator.clipboard.writeText(CMD).then(function(){ toast(I18N[lang].toast); }); }
+</script>
+</body>
+</html>
