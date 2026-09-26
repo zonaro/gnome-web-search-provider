@@ -221,9 +221,15 @@ def _pack_type(token: str, value: Any, buf: bytearray) -> None:
                 raise TypeError(f"expected list for {token}, got {type(value).__name__}")
         # D-Bus aligns elements globally (to the message body start), not to the
         # array payload: pack into the buffer after a length placeholder.
+        # The length covers the elements only, NOT the alignment padding
+        # before the first element (GDBus/dbus-broker convention: a peer
+        # sending a length that includes the leading pad is disconnected
+        # for an "invalid body").
         _pad(buf, 4)
         length_pos = len(buf)
         buf += b"\x00\x00\x00\x00"
+        if value:
+            _pad(buf, type_align(sub))
         data_start = len(buf)
         for item in value:
             _pad(buf, type_align(sub))
@@ -320,6 +326,10 @@ def _unpack_type(token: str, data: bytes, offset: int) -> Tuple[Any, int]:
         offset = _align_offset(offset, 4)
         (length,) = struct.unpack_from("<I", data, offset)
         offset += 4
+        if length:
+            # The length excludes the alignment padding before the first
+            # element (see _pack_type); skip it before measuring the end.
+            offset = _align_offset(offset, type_align(sub))
         end = offset + length
         values = []
         while offset < end:
@@ -551,6 +561,10 @@ class DBusService:
         self._serial = 1
         self._exports: List[Tuple[str, str, Any, Dict[str, Tuple[str, Optional[str]]], str]] = []
         self._stop = threading.Event()
+        # Method calls delivered by the bus while a _call() is still
+        # waiting for its reply (dbus-broker forwards a queued activation
+        # call before answering RequestName). Answered when run() starts.
+        self._pending_calls: List[Tuple[int, Dict[int, Any], bytes]] = []
 
     # ------------------------------------------------------------ exports
 
@@ -612,10 +626,16 @@ class DBusService:
             reply = self._read_message()
             if reply is None:
                 raise ConnectionError("bus closed while waiting for reply")
-            mtype, _serial, fields2, body2 = reply
+            mtype, msg_serial, fields2, body2 = reply
             if mtype == MESSAGE_SIGNAL:
                 # The bus broadcasts signals (NameAcquired/NameOwnerChanged)
                 # on the same socket; skip them until our reply arrives.
+                continue
+            if mtype == MESSAGE_METHOD_CALL:
+                # dbus-broker forwards a queued activation call before
+                # answering RequestName; stashing keeps the handshake
+                # alive and run() answers it once exports exist.
+                self._pending_calls.append((msg_serial, fields2, body2))
                 continue
             if mtype != MESSAGE_METHOD_RETURN and mtype != MESSAGE_ERROR:
                 raise RuntimeError(f"unexpected reply of type {mtype}")
@@ -684,6 +704,11 @@ class DBusService:
         """Serve method calls forever (blocking)."""
         if self._sock is None:
             raise RuntimeError("not connected; call connect() first")
+        pending, self._pending_calls = self._pending_calls, []
+        for call_serial, fields, body in pending:
+            response = self._dispatch(fields, body, call_serial)
+            if response is not None and self._sock is not None:
+                self._sock.sendall(response)
         try:
             while not self._stop.is_set():
                 ready, _, _ = select.select([self._sock], [], [], 0.25)
