@@ -74,6 +74,7 @@ _DOMAIN_OVERRIDES = {
     "hackernews": "ycombinator.com",
     "wolframalpha": "wolfram.com",
     "dockerhub": "docker.com",
+    "tidal": "tidal.com",
 }
 
 
