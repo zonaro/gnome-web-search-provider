@@ -13,7 +13,7 @@ open the chosen engine in your default browser.
 
 ## Features
 
-- 49 search providers, grouped by category (web, images, maps, videos,
+- 52 search providers, grouped by category (web, images, maps, videos,
   news, communities, media, reference/docs).
 - Enable **any number of providers simultaneously** — they all appear as
   separate entries in the search overview.
@@ -21,8 +21,9 @@ open the chosen engine in your default browser.
 - Customize **which web browser** opens the results (default: your system
   browser via `xdg-open`) — useful for flatpaks, alternate browsers or
   custom launchers.
-- Preferences window (`gnome-web-search-provider-config`) with a checkbox per
-  provider; changes apply immediately, no reload needed.
+- Preferences window (`gnome-web-search-provider-config`) with an icon grid per
+  provider (real site favicons with symbolic icons as fallback, name + switch,
+  with search filter); changes apply immediately, no reload needed.
 - Command-line client (`gnome-web-search-provider-cli`) to manage providers
   and the browser from the terminal.
 - Native GNOME configuration via a **GSettings schema**
@@ -45,7 +46,7 @@ open the chosen engine in your default browser.
 | **Maps** | Google Maps, Bing Maps, OpenStreetMap |
 | **Google Services** | Google News, Google Scholar, Google Videos, Google Translate (→ pt), Google Flights, Google Fonts |
 | **Communities** | Reddit, Hacker News, GitHub, Stack Overflow |
-| **Media** | YouTube, Spotify, IMDb, Steam |
+| **Media** | YouTube, YouTube Music, Spotify, Deezer, Tidal, IMDb, Steam |
 | **Reference & Tech** | Wikipedia, Wiktionary, WolframAlpha, PyPI, MDN Web Docs, Docker Hub, Internet Archive, Arch Wiki |
 
 > Kagi may show a sign-in wall for anonymous searches (it needs a Kagi
@@ -108,7 +109,28 @@ sh install-local.sh
    the search provider are discovered automatically.
 2. GNOME Shell discovers the provider via
    `/usr/local/share/gnome-shell/search-providers/org.gnome.WebSearch.SearchProvider.ini`
-   and autostarts it on demand. Toggle it in **Settings > Search** if needed.
+   (`sh install-local.sh` copies it there with sudo — required because the
+   Shell and gnome-control-center only scan system data dirs for
+   search-providers, not `~/.local/share`) and autostarts it on demand.
+   Opening **Settings > Search** re-scans on every open, so the entry can
+   show up without a relogin; overview search picks it up after the Shell
+   reloads providers (app install/update) or after logout/login. Toggle it
+   in **Settings > Search** if needed.
+3. Only **Provedores de Busca Web** (the config app) appears in the app grid.
+   There is intentionally no separate provider launcher: GNOME Shell
+   ignores search providers whose desktop entry doesn't `should_show()`
+   (e.g. `NoDisplay=true`), so the `.ini`'s `DesktopId` points at the
+   visible config desktop instead. If you still see a dead
+   **Web Search Provider** app, it is a stale file from an older install —
+   delete `~/.local/share/applications/org.gnome.WebSearch.SearchProvider.desktop`
+   and `/usr/local/share/applications/org.gnome.WebSearch.SearchProvider.desktop`
+   (or re-run `sh install-local.sh`, which removes them) and run
+   `update-desktop-database`.
+4. If the provider is missing from Settings > Search, check:
+   `gsettings get org.gnome.desktop.search-providers disabled` — if our
+   BusName is listed there, run
+   `gsettings reset org.gnome.desktop.search-providers disabled` and log
+   out/in again.
 
 ## Configuration
 
