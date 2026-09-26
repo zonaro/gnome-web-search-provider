@@ -14,7 +14,8 @@ open the chosen engine in your default browser.
 ## Features
 
 - 52 search providers, grouped by category (web, images, maps, videos,
-  news, communities, media, reference/docs).
+  news, communities, media, reference/docs) — plus your own **custom
+  providers** from any website.
 - Enable **any number of providers simultaneously** — they all appear as
   separate entries in the search overview.
 - **Google is the only provider enabled by default.**
@@ -187,8 +188,39 @@ gsettings set org.gnome.WebSearch.SearchProvider browser "firefox"
 
 Valid provider ids are the keys listed in `src/gnome_web_search_provider/providers.py`
 (e.g. `google`, `bing`, `duckduckgo`, `brave`, `startpage`, `google-images`,
-`google-maps`, `bing-images`, `youtube`, ...). Unknown ids are rejected by
-the CLI and ignored by the preferences window.
+`google-maps`, `bing-images`, `youtube`, ...) plus your `custom-*` ids.
+Unknown ids are rejected by the CLI and ignored by the preferences window.
+
+### Custom providers
+
+Any website with a search box can become a provider:
+
+1. Search for something on the site and copy the results URL, e.g.
+   `https://forum.example.com/search?q=linux`.
+2. Replace your search term with `{query}`:
+   `https://forum.example.com/search?q={query}`.
+3. Open the preferences window and click **+ Adicionar** in the
+   **Personalizados** section (or use the CLI below), paste the URL, give
+   it a name — done. It appears in the overview exactly like the
+   built-in providers.
+
+If the term goes in the URL path (e.g. `https://site.com/busca/linux`),
+tick the path option so spaces are encoded as `%20` instead of `+`
+(auto-detected when `{query}` comes before any `?`).
+
+Icons are fetched automatically from the site's favicon; you can also pick
+a custom image file per provider. Custom providers are stored in
+`~/.config/gnome-web-search-provider/custom_providers.json` and work with
+both the GSettings and the JSON backends.
+
+```bash
+# Add / list / remove from the terminal
+gnome-web-search-provider-cli custom add --name "Meu Fórum" --url "https://forum.example.com/search?q={query}"
+gnome-web-search-provider-cli custom add --name "Wiki" --url "https://wiki.example.com/busca/{query}" --path
+gnome-web-search-provider-cli custom add --name "Docs" --url "https://docs.example.com/?q={query}" --icon ~/imagens/docs.png
+gnome-web-search-provider-cli custom list
+gnome-web-search-provider-cli custom remove custom-meu-forum
+```
 
 ### JSON fallback
 
