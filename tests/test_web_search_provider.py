@@ -37,6 +37,10 @@ from gnome_web_search_provider.config import (  # noqa: E402
 from gnome_web_search_provider.providers import PROVIDERS  # noqa: E402
 
 
+def _provider(provider_id: str):
+    return PROVIDERS[provider_id]
+
+
 class FakeConfig:
     """In-memory ConfigManager stand-in for provider tests."""
 
@@ -455,14 +459,14 @@ class TestResultIcons(_TempXdgMixin, unittest.TestCase):
 
     def test_result_icon_uses_cached_favicon(self):
         path = self._write_cached("google", ".png")
-        self.assertEqual(self._result_icon("google"), path)
+        self.assertEqual(self._result_icon(_provider("google")), path)
 
     def test_result_icon_falls_back_without_cache(self):
-        self.assertEqual(self._result_icon("google"), "web-browser-symbolic")
+        self.assertEqual(self._result_icon(_provider("google")), "web-browser-symbolic")
 
     def test_result_icon_skips_unloadable_format(self):
         self._write_cached("google", ".webp")
-        self.assertEqual(self._result_icon("google"), "web-browser-symbolic")
+        self.assertEqual(self._result_icon(_provider("google")), "web-browser-symbolic")
 
 
 class TestDbusWire(unittest.TestCase):

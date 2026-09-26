@@ -45,7 +45,15 @@ except Exception:  # pragma: no cover - depends on optional PyGObject
 
 from . import favicons as _favicons  # noqa: E402
 from .config import ConfigManager  # noqa: E402
-from .providers import CATEGORIES, PROVIDERS, fallback_icon_name, get_category_label  # noqa: E402
+from .providers import (  # noqa: E402
+    CATEGORIES,
+    CUSTOM_CATEGORY,
+    all_providers,
+    detect_query_in_path,
+    fallback_icon_name,
+    get_category_label,
+    validate_custom_provider,
+)
 
 try:
     from .i18n import tr  # noqa: E402
@@ -102,6 +110,25 @@ def _icon_for(provider) -> str:
     return fallback_icon_name(provider.provider_id)
 
 
+def _custom_icon_file(provider):
+    """User-chosen icon file for a custom provider, or None."""
+    import os
+
+    path = getattr(provider, "icon_path", "") or ""
+    return path if path and os.path.isfile(path) else None
+
+
+def _image_source(provider):
+    """Best image file for ``provider``: custom icon, then cached favicon."""
+    custom = _custom_icon_file(provider)
+    if custom:
+        return custom
+    try:
+        return _favicons.cached_icon_path(provider.provider_id)
+    except Exception:
+        return None
+
+
 def _apply_gtk_dark_mode() -> None:
     """Mirror the GNOME `color-scheme` setting into pure-GTK apps.
 
@@ -147,6 +174,8 @@ else:
             self._images: dict = {}
             self._cards: list = []  # (provider_id, card, name_lower)
             self._sections: list = []  # (category_id, header, flowbox)
+            self._custom_flow = None
+            self._custom_header = None
             self._updating = False
             self._favicons_started = False
 
@@ -173,7 +202,7 @@ else:
             root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
             self.set_child(root)
 
-            # Search filter for the 49-provider grid.
+            # Search filter for the 52-provider grid.
             search_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
             search_row.set_margin_top(8)
             search_row.set_margin_start(12)
@@ -232,17 +261,42 @@ else:
 
         # ------------------------------------------------------ building
 
+        def _known_providers(self) -> dict:
+            try:
+                customs = self._config.get_custom_providers()
+            except Exception:
+                customs = []
+            return all_providers(customs)
+
         def _populate(self) -> None:
+            known = self._known_providers()
             enabled = set(self._config.get_enabled_providers())
             for category_id, category_label in CATEGORIES:
-                rows = [p for p in PROVIDERS.values() if p.category == category_id]
-                if not rows:
+                rows = [p for p in known.values() if p.category == category_id]
+                if not rows and category_id != CUSTOM_CATEGORY:
                     continue
 
-                header = Gtk.Label(label=get_category_label(category_id) or category_label)
-                header.set_halign(Gtk.Align.START)
-                header.get_style_context().add_class("category-header")
-                self._main_box.append(header)
+                if category_id == CUSTOM_CATEGORY:
+                    header_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+                    header_row.set_margin_start(12)
+                    header_row.set_margin_end(12)
+                    header = Gtk.Label(label=get_category_label(category_id) or category_label)
+                    header.set_halign(Gtk.Align.START)
+                    header.set_hexpand(True)
+                    header.get_style_context().add_class("category-header")
+                    header_row.append(header)
+                    add_button = Gtk.Button(label=tr("custom_add"))
+                    add_button.set_tooltip_text(tr("custom_add_tooltip"))
+                    add_button.set_valign(Gtk.Align.CENTER)
+                    add_button.connect("clicked", self._on_add_custom)
+                    header_row.append(add_button)
+                    self._main_box.append(header_row)
+                    self._custom_header = header_row
+                else:
+                    header = Gtk.Label(label=get_category_label(category_id) or category_label)
+                    header.set_halign(Gtk.Align.START)
+                    header.get_style_context().add_class("category-header")
+                    self._main_box.append(header)
 
                 flow = Gtk.FlowBox()
                 flow.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -257,7 +311,9 @@ else:
                 flow.set_max_children_per_line(6)
                 self._main_box.append(flow)
 
-                self._sections.append((category_id, header, flow))
+                self._sections.append((category_id, self._custom_header if category_id == CUSTOM_CATEGORY else header, flow))
+                if category_id == CUSTOM_CATEGORY:
+                    self._custom_flow = flow
 
                 for provider in rows:
                     card = self._build_card(provider, provider.provider_id in enabled)
@@ -284,12 +340,9 @@ else:
             icon.get_style_context().add_class("provider-icon")
             inner.append(icon)
             self._images[provider.provider_id] = icon
-            try:
-                cached = _favicons.cached_icon_path(provider.provider_id)
-            except Exception:
-                cached = None
+            cached = _image_source(provider)
             if cached:
-                self._apply_favicon_image(icon, cached)
+                self._apply_favicon_image(icon, cached, _icon_for(provider))
 
             name = Gtk.Label(label=provider.name)
             name.set_wrap(True)
@@ -315,7 +368,22 @@ else:
 
             switch.connect("notify::active", self._on_switch_toggled, provider.provider_id, card)
             press.connect("clicked", self._on_card_pressed, provider.provider_id)
+            if provider.category == CUSTOM_CATEGORY:
+                card.append(self._build_custom_actions(provider))
             return card
+
+        def _build_custom_actions(self, provider) -> Gtk.Widget:
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+            row.set_halign(Gtk.Align.CENTER)
+            edit = Gtk.Button(label=tr("custom_edit"))
+            edit.get_style_context().add_class("flat")
+            edit.connect("clicked", self._on_edit_custom, provider.provider_id)
+            row.append(edit)
+            remove = Gtk.Button(label=tr("custom_delete"))
+            remove.get_style_context().add_class("flat")
+            remove.connect("clicked", self._on_remove_custom, provider.provider_id)
+            row.append(remove)
+            return row
 
         @staticmethod
         def _update_card_style(card: Gtk.Widget, active: bool) -> None:
@@ -326,22 +394,55 @@ else:
                 ctx.add_class("disabled")
 
         @staticmethod
-        def _apply_favicon_image(image: Gtk.Image, path: str) -> None:
+        def _apply_favicon_image(image: Gtk.Image, path: str, fallback_name: str = "") -> None:
+            try:
+                with open(path, "rb") as fh:
+                    head = fh.read(256)
+                if not head or len(head) < 100:
+                    raise ValueError("favicon too small")
+            except Exception:
+                if fallback_name:
+                    try:
+                        image.set_from_icon_name(fallback_name)
+                    except Exception:
+                        pass
+                return
             try:
                 from gi.repository import GdkPixbuf
 
-                if GdkPixbuf.Pixbuf.new_from_file(path) is None:
-                    return
-            except Exception:
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file(path)
+                if pixbuf is None:
+                    raise ValueError("unloadable pixbuf")
+                width, height = pixbuf.get_width(), pixbuf.get_height()
+                if width <= 0 or height <= 0:
+                    raise ValueError("empty pixbuf")
+                # Downscale huge sources so cards stay uniform; never fail
+                # the card when scaling is unavailable.
                 try:
-                    image.set_from_file(path)
+                    if max(width, height) > 256:
+                        scale = 256 / max(width, height)
+                        pixbuf = pixbuf.scale_simple(
+                            max(1, int(width * scale)),
+                            max(1, int(height * scale)),
+                            2,  # GdkPixbuf.InterpType.BILINEAR
+                        )
                 except Exception:
+                    pass
+                try:
+                    image.set_from_pixbuf(pixbuf)
                     return
-                return
+                except Exception:
+                    pass
+            except Exception:
+                pass
             try:
                 image.set_from_file(path)
             except Exception:
-                pass
+                if fallback_name:
+                    try:
+                        image.set_from_icon_name(fallback_name)
+                    except Exception:
+                        pass
 
         def _refresh_favicons(self, force: bool = False) -> None:
             if self._favicons_started and not force:
@@ -351,7 +452,7 @@ else:
             def _work():
                 try:
                     results = _favicons.ensure_favicons(
-                        {pid: p.url for pid, p in PROVIDERS.items()},
+                        {pid: p.url for pid, p in self._known_providers().items()},
                         force=force,
                     )
                 except Exception:
@@ -362,13 +463,34 @@ else:
 
             threading.Thread(target=_work, name="favicon-fetch", daemon=True).start()
 
+        def _fetch_favicon_for(self, provider_id: str, url: str) -> None:
+            def _work():
+                try:
+                    path = _favicons.fetch_favicon(provider_id, url)
+                except Exception:
+                    return
+                if not path or GLib is None:
+                    return
+                GLib.idle_add(self._apply_single_favicon, provider_id, path)
+
+            threading.Thread(target=_work, name="favicon-single", daemon=True).start()
+
+        def _apply_single_favicon(self, provider_id: str, path: str) -> bool:
+            self._apply_favicon_results({provider_id: path})
+            return False
+
         def _apply_favicon_results(self, results: dict) -> bool:
+            known = self._known_providers()
             for provider_id, path in results.items():
                 if not path:
                     continue
                 image = self._images.get(provider_id)
                 if image is not None:
-                    self._apply_favicon_image(image, path)
+                    provider = known.get(provider_id)
+                    if provider is not None and _custom_icon_file(provider):
+                        continue
+                    fallback = _icon_for(provider) if provider is not None else ""
+                    self._apply_favicon_image(image, path, fallback)
             return False
 
         def _on_refresh_icons(self, _button: Gtk.Button) -> None:
@@ -413,7 +535,7 @@ else:
 
         def _set_all(self, enabled: bool) -> None:
             if enabled:
-                self._config.set_enabled_providers(list(PROVIDERS.keys()))
+                self._config.set_enabled_providers(list(self._known_providers().keys()))
             else:
                 self._config.set_enabled_providers([])
             self._updating = True
@@ -437,6 +559,239 @@ else:
                 subprocess.Popen([_SEARCH_SETTINGS_BIN, "search"])
             except OSError:
                 pass
+
+        # ------------------------------------------- custom providers
+
+        def _custom_entry(self, provider_id: str):
+            for item in self._config.get_custom_providers():
+                if str(item.get("id")) == provider_id:
+                    return item
+            return None
+
+        def _on_add_custom(self, *_args) -> None:
+            self._show_custom_dialog(None)
+
+        def _on_edit_custom(self, _button: Gtk.Button, provider_id: str) -> None:
+            entry = self._custom_entry(provider_id)
+            if entry is not None:
+                self._show_custom_dialog(entry)
+
+        def _on_remove_custom(self, _button: Gtk.Button, provider_id: str) -> None:
+            entry = self._custom_entry(provider_id)
+            if entry is None:
+                return
+            dialog = Gtk.MessageDialog(
+                transient_for=self,
+                modal=True,
+                message_type=Gtk.MessageType.QUESTION,
+                buttons=Gtk.ButtonsType.OK_CANCEL,
+                text=tr("custom_delete_confirm", name=entry.get("name", provider_id)),
+            )
+            dialog.connect("response", self._on_remove_custom_response, provider_id)
+            dialog.present()
+
+        def _on_remove_custom_response(self, dialog: Gtk.MessageDialog, response: int, provider_id: str) -> None:
+            dialog.destroy()
+            if response != Gtk.ResponseType.OK:
+                return
+            if self._config.remove_custom_provider(provider_id):
+                self._rebuild_custom()
+
+        def _rebuild_custom(self) -> None:
+            if self._custom_flow is None:
+                return
+            known = self._known_providers()
+            enabled = set(self._config.get_enabled_providers())
+            child = self._custom_flow.get_first_child()
+            while child is not None:
+                nxt = child.get_next_sibling()
+                self._custom_flow.remove(child)
+                child = nxt
+            self._cards = [(pid, card, name) for pid, card, name in self._cards if not pid.startswith("custom-")]
+            for pid in [key for key in self._switches if key.startswith("custom-")]:
+                self._switches.pop(pid, None)
+                self._images.pop(pid, None)
+            for provider in known.values():
+                if provider.category != CUSTOM_CATEGORY:
+                    continue
+                card = self._build_card(provider, provider.provider_id in enabled)
+                self._custom_flow.append(card)
+            self._on_search_changed(self._search_entry)
+
+        def _show_custom_dialog(self, existing) -> None:
+            is_edit = existing is not None
+            dialog = Gtk.Dialog(
+                title=tr("custom_dialog_edit_title") if is_edit else tr("custom_dialog_title"),
+                transient_for=self,
+                modal=True,
+            )
+            dialog.add_button(tr("custom_cancel"), Gtk.ResponseType.CANCEL)
+            dialog.add_button(tr("custom_save"), Gtk.ResponseType.OK)
+            dialog.set_default_response(Gtk.ResponseType.OK)
+            content = dialog.get_content_area()
+            content.set_spacing(8)
+            content.set_margin_top(12)
+            content.set_margin_bottom(12)
+            content.set_margin_start(12)
+            content.set_margin_end(12)
+
+            name_entry = Gtk.Entry()
+            name_entry.set_placeholder_text(tr("custom_name_placeholder"))
+            name_entry.set_hexpand(True)
+            if is_edit:
+                name_entry.set_text(str(existing.get("name", "")))
+
+            url_entry = Gtk.Entry()
+            url_entry.set_placeholder_text(tr("custom_url_placeholder"))
+            url_entry.set_hexpand(True)
+            if is_edit:
+                url_entry.set_text(str(existing.get("url", "")))
+
+            hint = Gtk.Label(label=tr("custom_url_hint"))
+            hint.set_wrap(True)
+            hint.set_halign(Gtk.Align.START)
+
+            path_check = Gtk.CheckButton(label=tr("custom_path_label"))
+            if is_edit:
+                path_check.set_active(bool(existing.get("query_in_path", False)))
+            else:
+                path_check.set_active(False)
+
+            icon_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            icon_entry = Gtk.Entry()
+            icon_entry.set_placeholder_text(tr("custom_icon_auto"))
+            icon_entry.set_hexpand(True)
+            icon_entry.set_editable(False)
+            if is_edit and str(existing.get("icon") or ""):
+                icon_entry.set_text(str(existing.get("icon")))
+            icon_choose = Gtk.Button(label=tr("custom_icon_choose"))
+            icon_clear = Gtk.Button(label=tr("custom_icon_clear"))
+            icon_box.append(icon_entry)
+            icon_box.append(icon_choose)
+            icon_box.append(icon_clear)
+
+            preview = Gtk.Label(label="")
+            preview.set_wrap(True)
+            preview.set_halign(Gtk.Align.START)
+            preview.set_selectable(True)
+
+            error = Gtk.Label(label="")
+            error.set_wrap(True)
+            error.set_halign(Gtk.Align.START)
+
+            for label_text, widget in (
+                (tr("custom_name_label"), name_entry),
+                (tr("custom_url_label"), url_entry),
+                (tr("custom_icon_label"), icon_box),
+                (tr("custom_preview_label"), preview),
+            ):
+                row_label = Gtk.Label(label=label_text)
+                row_label.set_halign(Gtk.Align.START)
+                content.append(row_label)
+                content.append(widget)
+            content.append(hint)
+            content.append(path_check)
+            content.append(error)
+
+            state = {"icon": icon_entry.get_text().strip()}
+
+            def _refresh_preview(*_args) -> None:
+                import os
+
+                url = url_entry.get_text().strip()
+                if "{query}" in url and url.startswith(("http://", "https://")):
+                    try:
+                        sample = url.replace("{query}", "caf%C3%A9+%26+m%C3%BAsica" if not path_check.get_active() else "caf%C3%A9%20%26%20m%C3%BAsica")
+                        preview.set_text(sample)
+                    except Exception:
+                        preview.set_text(url)
+                else:
+                    preview.set_text(url or "")
+                if not path_check.get_active() and detect_query_in_path(url):
+                    path_check.set_active(True)
+
+            def _choose_icon(*_args) -> None:
+                chooser = Gtk.FileChooserDialog(
+                    title=tr("custom_icon_label"),
+                    transient_for=dialog,
+                    modal=True,
+                    action=Gtk.FileChooserAction.OPEN,
+                )
+                chooser.add_button(tr("custom_cancel"), Gtk.ResponseType.CANCEL)
+                chooser.add_button(tr("custom_save"), Gtk.ResponseType.ACCEPT)
+                image_filter = Gtk.FileFilter()
+                image_filter.set_name("Images")
+                for pattern in ("*.png", "*.svg", "*.ico", "*.jpg", "*.jpeg", "*.gif", "*.webp"):
+                    image_filter.add_pattern(pattern)
+                    image_filter.add_pattern(pattern.upper())
+                chooser.add_filter(image_filter)
+
+                def _on_file_response(dlg: Gtk.FileChooserDialog, response: int) -> None:
+                    if response == Gtk.ResponseType.ACCEPT:
+                        picked = dlg.get_file()
+                        if picked is not None:
+                            state["icon"] = picked.get_path() or ""
+                            icon_entry.set_text(state["icon"])
+                    dlg.destroy()
+
+                chooser.connect("response", _on_file_response)
+                chooser.present()
+
+            def _clear_icon(*_args) -> None:
+                state["icon"] = ""
+                icon_entry.set_text("")
+
+            url_entry.connect("changed", _refresh_preview)
+            path_check.connect("toggled", _refresh_preview)
+            icon_choose.connect("clicked", _choose_icon)
+            icon_clear.connect("clicked", _clear_icon)
+            _refresh_preview()
+
+            def _on_dialog_response(dlg: Gtk.Dialog, response: int) -> None:
+                if response != Gtk.ResponseType.OK:
+                    dlg.destroy()
+                    return
+                name = name_entry.get_text().strip()
+                url = url_entry.get_text().strip()
+                icon = state["icon"].strip()
+                errors = validate_custom_provider(name, url)
+                import os
+
+                if icon and not os.path.isfile(icon):
+                    errors = errors + ["icon"]
+                if errors:
+                    if "name" in errors:
+                        error.set_text(tr("custom_error_name"))
+                    elif "icon" in errors:
+                        error.set_text(tr("custom_error_icon"))
+                    else:
+                        error.set_text(tr("custom_error_url"))
+                    return
+                try:
+                    if is_edit:
+                        saved = self._config.update_custom_provider(
+                            str(existing.get("id")),
+                            name=name,
+                            url=url,
+                            icon=icon,
+                            query_in_path=path_check.get_active(),
+                        )
+                    else:
+                        saved = self._config.add_custom_provider(
+                            name=name,
+                            url=url,
+                            icon=icon,
+                            query_in_path=path_check.get_active(),
+                        )
+                except (ValueError, KeyError):
+                    error.set_text(tr("custom_error_url"))
+                    return
+                dlg.destroy()
+                self._rebuild_custom()
+                self._fetch_favicon_for(str(saved.get("id", "")), str(saved.get("url", "")))
+
+            dialog.connect("response", _on_dialog_response)
+            dialog.present()
 
     _BaseApp = Adw.Application if _HAS_ADW else Gtk.Application
 
