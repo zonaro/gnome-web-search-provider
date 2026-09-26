@@ -21,7 +21,18 @@ from typing import Dict, List, Tuple
 
 from .config import DEFAULT_BROWSER, ConfigManager
 from .dbus import DBusService, Variant
-from .providers import PROVIDERS, SearchProvider
+from . import favicons as _favicons
+from .providers import PROVIDERS, SearchProvider, fallback_icon_name
+
+try:
+    from .i18n import tr
+except Exception:  # pragma: no cover - i18n must never break the daemon
+
+    def tr(key: str, lang=None, **kwargs: object) -> str:  # type: ignore[no-redef]
+        try:
+            return str(key.format(**kwargs)) if kwargs else str(key)
+        except Exception:
+            return str(key)
 
 BUS_NAME = "org.gnome.WebSearch.SearchProvider"
 OBJECT_PATH = "/org/gnome/WebSearch/SearchProvider"
@@ -30,6 +41,27 @@ INTERFACE_NAME = "org.gnome.Shell.SearchProvider2"
 # Separator between provider id and query inside a result id.  The unit
 # separator character is very unlikely to be typed by a user.
 RESULT_SEPARATOR = "\u241f"
+
+# Favicon cache extensions GNOME's pixbuf loaders can always render.
+# Anything else (e.g. .webp without the extra loader) falls back to the
+# themed icon name so results never end up with a broken image.
+_LOADABLE_FAVICON_EXTS = (".png", ".ico", ".svg", ".jpg", ".jpeg", ".gif")
+
+
+def _result_icon(provider_id: str) -> str:
+    """Cached favicon path for ``provider_id`` or a themed fallback name.
+
+    GNOME Shell turns this ``gicon`` string into a FileIcon (absolute
+    path) or a ThemedIcon (icon name) via ``icon_new_for_string`` — the
+    same two sources the preferences window shows.
+    """
+    try:
+        cached = _favicons.cached_icon_path(provider_id)
+    except Exception:
+        cached = None
+    if cached and cached.lower().endswith(_LOADABLE_FAVICON_EXTS):
+        return cached
+    return fallback_icon_name(provider_id)
 
 # Method name -> (input signature, output signature).  Output ``None``
 # means a void reply.  This table drives the pure-stdlib D-Bus dispatch.
@@ -105,10 +137,18 @@ class WebSearchProvider(object):
 
     def GetInitialResultSet(self, terms: List[str]) -> List[str]:
         # One result per enabled provider; the query itself is the payload.
-        return self._result_ids(" ".join(terms))
+        # Empty queries return nothing so the overview doesn't show a
+        # "Search ... for ''" entry.
+        query = " ".join(terms).strip()
+        if not query:
+            return []
+        return self._result_ids(query)
 
     def GetSubsearchResultSet(self, previous_results: List[str], terms: List[str]) -> List[str]:
-        return self._result_ids(" ".join(terms))
+        query = " ".join(terms).strip()
+        if not query:
+            return []
+        return self._result_ids(query)
 
     def GetResultMetas(self, results: List[str]) -> List[Dict[str, Variant]]:
         metas = []
@@ -120,9 +160,11 @@ class WebSearchProvider(object):
             metas.append(
                 {
                     "id": Variant("s", result),
-                    "name": Variant("s", f"Search {provider.name} for '{query}'"),
-                    "description": Variant("s", "Press Enter to open in browser"),
-                    "icon": Variant("s", provider.icon),
+                    "name": Variant(
+                        "s", tr("search_for", provider=provider.name, query=query)
+                    ),
+                    "description": Variant("s", tr("press_enter")),
+                    "gicon": Variant("s", _result_icon(provider_id)),
                 }
             )
         return metas
@@ -156,10 +198,10 @@ def main() -> int:
             {name: (in_sig, out_sig or None) for name, (in_sig, out_sig) in SERVICE_METHODS.items()},
             introspect_xml=provider.__dbus_xml__,
         )
-        print(f"Service running at {BUS_NAME}...", flush=True)
+        print(tr("service_running", bus=BUS_NAME), flush=True)
         service.run()
     except Exception as exc:
-        print(f"Error starting service: {exc}", flush=True)
+        print(tr("service_error", error=exc), flush=True)
         return 1
     return 0
 

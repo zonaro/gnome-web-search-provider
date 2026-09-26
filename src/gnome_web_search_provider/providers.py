@@ -21,6 +21,60 @@ from urllib.parse import quote, quote_plus
 
 DEFAULT_ICON = "web-browser"
 
+# Themed fallback icon per category (all verified against Adwaita).
+CATEGORY_ICONS: Dict[str, str] = {
+    "web": "web-browser-symbolic",
+    "images": "image-x-generic-symbolic",
+    "maps": "mark-location-symbolic",
+    "google-services": "system-search-symbolic",
+    "community": "system-users-symbolic",
+    "media": "multimedia-player-symbolic",
+    "reference": "help-browser-symbolic",
+}
+
+# Distinctive fallback icons for a few providers (Adwaita names).
+PROVIDER_ICONS: Dict[str, str] = {
+    "google-maps": "find-location-symbolic",
+    "bing-maps": "find-location-symbolic",
+    "openstreetmap": "find-location-symbolic",
+    "google-images": "folder-pictures-symbolic",
+    "bing-images": "folder-pictures-symbolic",
+    "duckduckgo-images": "folder-pictures-symbolic",
+    "brave-images": "folder-pictures-symbolic",
+    "startpage-images": "folder-pictures-symbolic",
+    "youtube": "video-x-generic-symbolic",
+    "google-videos": "video-x-generic-symbolic",
+    "spotify": "audio-x-generic-symbolic",
+    "youtube-music": "audio-x-generic-symbolic",
+    "deezer": "audio-x-generic-symbolic",
+    "tidal": "audio-x-generic-symbolic",
+    "flights": "airplane-mode-symbolic",
+    "fonts": "font-x-generic-symbolic",
+    "translate": "accessories-dictionary-symbolic",
+    "wiktionary": "accessories-dictionary-symbolic",
+    "wikipedia": "help-browser-symbolic",
+    "mdn": "text-x-generic-symbolic",
+    "archwiki": "text-x-generic-symbolic",
+    "pypi": "application-x-executable-symbolic",
+    "github": "application-x-executable-symbolic",
+    "dockerhub": "application-x-executable-symbolic",
+    "stackoverflow": "application-x-executable-symbolic",
+    "hackernews": "application-x-executable-symbolic",
+    "wolframalpha": "applications-science-symbolic",
+}
+
+
+def fallback_icon_name(provider_id: str) -> str:
+    """Themed icon name for ``provider_id`` when no favicon is cached."""
+    if provider_id in PROVIDER_ICONS:
+        return PROVIDER_ICONS[provider_id]
+    provider = PROVIDERS.get(provider_id)
+    if provider is not None and provider.category in CATEGORY_ICONS:
+        return CATEGORY_ICONS[provider.category]
+    if provider is not None and provider.icon:
+        return provider.icon
+    return "web-browser-symbolic"
+
 
 @dataclass(frozen=True)
 class SearchProvider:
@@ -54,6 +108,8 @@ def _p(
 
 
 # Ordered category list, used by the preferences window: (id, display label).
+# Labels below stay in English for backwards compatibility; use
+# ``get_category_label()`` to render them in the user's language.
 CATEGORIES: List[Tuple[str, str]] = [
     ("web", "Web Search"),
     ("images", "Images"),
@@ -119,7 +175,10 @@ PROVIDERS: Dict[str, SearchProvider] = {
     "stackoverflow": _p("stackoverflow", "Stack Overflow", "https://stackoverflow.com/search?q={query}", "community"),
     # ---------------------------------------------------- Media & entertainment
     "youtube": _p("youtube", "YouTube", "https://www.youtube.com/results?search_query={query}", "media"),
+    "youtube-music": _p("youtube-music", "YouTube Music", "https://music.youtube.com/search?q={query}", "media"),
     "spotify": _p("spotify", "Spotify", "https://open.spotify.com/search/{query}", "media", query_in_path=True),
+    "deezer": _p("deezer", "Deezer", "https://www.deezer.com/search/{query}", "media", query_in_path=True),
+    "tidal": _p("tidal", "Tidal", "https://listen.tidal.com/search?q={query}", "media"),
     "imdb": _p("imdb", "IMDb", "https://www.imdb.com/find/?q={query}", "media"),
     "steam": _p("steam", "Steam", "https://store.steampowered.com/search/?term={query}", "media"),
     # ---------------------------------------------------- Reference & tech docs
@@ -136,3 +195,25 @@ PROVIDERS: Dict[str, SearchProvider] = {
 # Keep the id that must be enabled by default in sync with the GSettings
 # schema default and the JSON backend default.
 DEFAULT_PROVIDER_ID = "google"
+
+_CATEGORY_TR_KEYS = {
+    "web": "cat_web",
+    "images": "cat_images",
+    "maps": "cat_maps",
+    "google-services": "cat_google_services",
+    "community": "cat_community",
+    "media": "cat_media",
+    "reference": "cat_reference",
+}
+
+
+def get_category_label(category_id: str, lang=None) -> str:
+    try:
+        from .i18n import tr
+    except Exception:
+        return dict(CATEGORIES).get(category_id, category_id)
+    key = _CATEGORY_TR_KEYS.get(category_id)
+    if key is None:
+        return dict(CATEGORIES).get(category_id, category_id)
+    label = tr(key, lang=lang)
+    return label if label != key else dict(CATEGORIES).get(category_id, category_id)
