@@ -23,11 +23,20 @@ DEFAULT_BROWSER = "xdg-open"
 
 CONFIG_DIR_NAME = "gnome-web-search-provider"
 CONFIG_FILE_NAME = "config.json"
+CUSTOM_FILE_NAME = "custom_providers.json"
+
+
+def _config_dir() -> str:
+    base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
+    return os.path.join(base, CONFIG_DIR_NAME)
 
 
 def _config_file_path() -> str:
-    base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
-    return os.path.join(base, CONFIG_DIR_NAME, CONFIG_FILE_NAME)
+    return os.path.join(_config_dir(), CONFIG_FILE_NAME)
+
+
+def _custom_file_path() -> str:
+    return os.path.join(_config_dir(), CUSTOM_FILE_NAME)
 
 
 def _schema_available(schema_id: str = SCHEMA_ID) -> bool:
@@ -127,6 +136,116 @@ class ConfigManager:
         data = self._read_data()
         data["browser"] = command
         self._write_data(data)
+
+    # ------------------------------------------------ custom providers
+
+    def get_custom_providers(self) -> List[Dict[str, Any]]:
+        try:
+            with open(_custom_file_path(), encoding="utf-8") as fh:
+                data = json.load(fh)
+        except (OSError, ValueError):
+            return []
+        if not isinstance(data, list):
+            return []
+        return [item for item in data if isinstance(item, dict)]
+
+    def save_custom_providers(self, items: List[Dict[str, Any]]) -> None:
+        path = _custom_file_path()
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        tmp = f"{path}.tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump(list(items), fh, indent=2)
+        os.replace(tmp, path)
+
+    def add_custom_provider(
+        self,
+        name: str,
+        url: str,
+        icon: str = "",
+        query_in_path: Optional[bool] = None,
+    ) -> Dict[str, Any]:
+        from .providers import (
+            CUSTOM_ID_PREFIX,
+            PROVIDERS,
+            detect_query_in_path,
+            slugify_provider_id,
+            validate_custom_provider,
+        )
+
+        errors = validate_custom_provider(name, url)
+        if errors:
+            raise ValueError(f"invalid custom provider: {','.join(errors)}")
+        icon = (icon or "").strip()
+        if icon and not os.path.isfile(icon):
+            raise ValueError("invalid custom provider: icon")
+        existing = self.get_custom_providers()
+        taken = set(PROVIDERS) | {str(item.get("id")) for item in existing}
+        slug = slugify_provider_id(name)
+        provider_id = f"{CUSTOM_ID_PREFIX}{slug}"
+        suffix = 2
+        while provider_id in taken:
+            provider_id = f"{CUSTOM_ID_PREFIX}{slug}-{suffix}"
+            suffix += 1
+        entry = {
+            "id": provider_id,
+            "name": name.strip(),
+            "url": url.strip(),
+            "icon": icon,
+            "query_in_path": detect_query_in_path(url) if query_in_path is None else bool(query_in_path),
+        }
+        existing.append(entry)
+        self.save_custom_providers(existing)
+        current = self.get_enabled_providers()
+        if provider_id not in current:
+            current.append(provider_id)
+            self.set_enabled_providers(current)
+        return entry
+
+    def update_custom_provider(
+        self,
+        provider_id: str,
+        name: Optional[str] = None,
+        url: Optional[str] = None,
+        icon: Optional[str] = None,
+        query_in_path: Optional[bool] = None,
+    ) -> Dict[str, Any]:
+        from .providers import detect_query_in_path, validate_custom_provider
+
+        items = self.get_custom_providers()
+        for item in items:
+            if str(item.get("id")) == provider_id:
+                target = item
+                break
+        else:
+            raise KeyError(provider_id)
+        new_name = name.strip() if name is not None else str(target.get("name", ""))
+        new_url = url.strip() if url is not None else str(target.get("url", ""))
+        errors = validate_custom_provider(new_name, new_url)
+        if errors:
+            raise ValueError(f"invalid custom provider: {','.join(errors)}")
+        new_icon = icon.strip() if icon is not None else str(target.get("icon") or "")
+        if new_icon and not os.path.isfile(new_icon):
+            raise ValueError("invalid custom provider: icon")
+        target["name"] = new_name
+        target["url"] = new_url
+        target["icon"] = new_icon
+        if query_in_path is None and url is not None:
+            target["query_in_path"] = detect_query_in_path(new_url)
+        elif query_in_path is not None:
+            target["query_in_path"] = bool(query_in_path)
+        self.save_custom_providers(items)
+        return target
+
+    def remove_custom_provider(self, provider_id: str) -> bool:
+        items = self.get_custom_providers()
+        kept = [item for item in items if str(item.get("id")) != provider_id]
+        if len(kept) == len(items):
+            return False
+        self.save_custom_providers(kept)
+        current = self.get_enabled_providers()
+        if provider_id in current:
+            self.set_enabled_providers([pid for pid in current if pid != provider_id])
+        return True
 
     # ------------------------------------------------------------------
     # JSON file backend helpers

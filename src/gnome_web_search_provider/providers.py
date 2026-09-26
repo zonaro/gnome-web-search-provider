@@ -16,10 +16,14 @@ URLs were verified in 2026 (HTTP checks + redirect inspection):
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 from urllib.parse import quote, quote_plus
 
 DEFAULT_ICON = "web-browser"
+
+CUSTOM_CATEGORY = "custom"
+CUSTOM_ID_PREFIX = "custom-"
+QUERY_PLACEHOLDER = "{query}"
 
 # Themed fallback icon per category (all verified against Adwaita).
 CATEGORY_ICONS: Dict[str, str] = {
@@ -30,6 +34,7 @@ CATEGORY_ICONS: Dict[str, str] = {
     "community": "system-users-symbolic",
     "media": "multimedia-player-symbolic",
     "reference": "help-browser-symbolic",
+    "custom": "starred-symbolic",
 }
 
 # Distinctive fallback icons for a few providers (Adwaita names).
@@ -84,6 +89,7 @@ class SearchProvider:
     category: str
     icon: str = DEFAULT_ICON
     query_in_path: bool = field(default=False, repr=False)
+    icon_path: str = field(default="", repr=False)
 
     def build_url(self, query: str) -> str:
         """Return the full search URL for ``query``, properly encoded."""
@@ -118,6 +124,7 @@ CATEGORIES: List[Tuple[str, str]] = [
     ("community", "Communities & Forums"),
     ("media", "Media & Entertainment"),
     ("reference", "Reference & Tech Docs"),
+    ("custom", "Custom"),
 ]
 
 PROVIDERS: Dict[str, SearchProvider] = {
@@ -204,6 +211,7 @@ _CATEGORY_TR_KEYS = {
     "community": "cat_community",
     "media": "cat_media",
     "reference": "cat_reference",
+    "custom": "cat_custom",
 }
 
 
@@ -217,3 +225,63 @@ def get_category_label(category_id: str, lang=None) -> str:
         return dict(CATEGORIES).get(category_id, category_id)
     label = tr(key, lang=lang)
     return label if label != key else dict(CATEGORIES).get(category_id, category_id)
+
+
+def slugify_provider_id(name: str) -> str:
+    slug = "".join(c.lower() if c.isalnum() else "-" for c in (name or "").strip())
+    slug = "-".join(part for part in slug.split("-") if part)
+    return slug[:40] or "site"
+
+
+def detect_query_in_path(url: str) -> bool:
+    head = (url or "").split("#", 1)[0].split("?", 1)[0]
+    return QUERY_PLACEHOLDER in head
+
+
+def validate_custom_provider(name: str, url: str) -> List[str]:
+    errors: List[str] = []
+    if not (name or "").strip():
+        errors.append("name")
+    elif len(name.strip()) > 60:
+        errors.append("name")
+    url = (url or "").strip()
+    if not url.startswith(("http://", "https://")):
+        errors.append("url")
+    elif QUERY_PLACEHOLDER not in url:
+        errors.append("url")
+    elif len(url) > 500:
+        errors.append("url")
+    return errors
+
+
+def custom_provider_from_dict(data: Dict[str, Any]) -> SearchProvider:
+    return SearchProvider(
+        provider_id=str(data.get("id", "")),
+        name=str(data.get("name", "")),
+        url=str(data.get("url", "")),
+        category=CUSTOM_CATEGORY,
+        query_in_path=bool(data.get("query_in_path", detect_query_in_path(str(data.get("url", ""))))),
+        icon_path=str(data.get("icon") or ""),
+    )
+
+
+def custom_providers_from_list(items: List[Dict[str, Any]]) -> Dict[str, SearchProvider]:
+    merged: Dict[str, SearchProvider] = {}
+    for item in items or []:
+        if not isinstance(item, dict):
+            continue
+        provider_id = str(item.get("id", ""))
+        url = str(item.get("url", ""))
+        name = str(item.get("name", ""))
+        if not provider_id or not name.strip() or QUERY_PLACEHOLDER not in url:
+            continue
+        if provider_id in PROVIDERS or provider_id in merged:
+            continue
+        merged[provider_id] = custom_provider_from_dict(item)
+    return merged
+
+
+def all_providers(custom_items: List[Dict[str, Any]]) -> Dict[str, SearchProvider]:
+    combined = dict(PROVIDERS)
+    combined.update(custom_providers_from_list(custom_items))
+    return combined
