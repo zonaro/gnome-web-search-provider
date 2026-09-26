@@ -168,6 +168,206 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "pt_BR": "Referência & Docs Técnicas",
         "es": "Referencia y docs técnicos",
     },
+    "cat_custom": {
+        "en": "Custom",
+        "pt_BR": "Personalizados",
+        "es": "Personalizados",
+    },
+    "custom_add": {
+        "en": "+ Add custom",
+        "pt_BR": "+ Adicionar",
+        "es": "+ Añadir",
+    },
+    "custom_add_tooltip": {
+        "en": "Create a search provider from any website URL",
+        "pt_BR": "Criar um provedor de busca a partir de qualquer URL",
+        "es": "Crear un proveedor de búsqueda desde cualquier URL",
+    },
+    "custom_dialog_title": {
+        "en": "Add custom search provider",
+        "pt_BR": "Adicionar provedor personalizado",
+        "es": "Añadir proveedor personalizado",
+    },
+    "custom_dialog_edit_title": {
+        "en": "Edit custom search provider",
+        "pt_BR": "Editar provedor personalizado",
+        "es": "Editar proveedor personalizado",
+    },
+    "custom_name_label": {
+        "en": "Name",
+        "pt_BR": "Nome",
+        "es": "Nombre",
+    },
+    "custom_name_placeholder": {
+        "en": "e.g. My Forum",
+        "pt_BR": "ex.: Meu Fórum",
+        "es": "p. ej. Mi Foro",
+    },
+    "custom_url_label": {
+        "en": "Search URL",
+        "pt_BR": "URL de busca",
+        "es": "URL de búsqueda",
+    },
+    "custom_url_placeholder": {
+        "en": "https://example.com/search?q={query}",
+        "pt_BR": "https://exemplo.com/busca?q={query}",
+        "es": "https://ejemplo.com/buscar?q={query}",
+    },
+    "custom_url_hint": {
+        "en": "Paste the site's search URL and replace your search term with {query}.",
+        "pt_BR": "Cole a URL de busca do site e troque seu termo por {query}.",
+        "es": "Pegue la URL de búsqueda del sitio y reemplace su término por {query}.",
+    },
+    "custom_path_label": {
+        "en": "Term goes in the URL path (uses %20 for spaces)",
+        "pt_BR": "O termo vai no caminho da URL (usa %20 nos espaços)",
+        "es": "El término va en la ruta de la URL (usa %20 en los espacios)",
+    },
+    "custom_icon_label": {
+        "en": "Icon",
+        "pt_BR": "Ícone",
+        "es": "Icono",
+    },
+    "custom_icon_auto": {
+        "en": "Automatic (site favicon)",
+        "pt_BR": "Automático (favicon do site)",
+        "es": "Automático (favicon del sitio)",
+    },
+    "custom_icon_choose": {
+        "en": "Choose file…",
+        "pt_BR": "Escolher arquivo…",
+        "es": "Elegir archivo…",
+    },
+    "custom_icon_clear": {
+        "en": "Use automatic icon",
+        "pt_BR": "Usar ícone automático",
+        "es": "Usar icono automático",
+    },
+    "custom_preview_label": {
+        "en": "Preview",
+        "pt_BR": "Prévia",
+        "es": "Vista previa",
+    },
+    "custom_save": {
+        "en": "Save",
+        "pt_BR": "Salvar",
+        "es": "Guardar",
+    },
+    "custom_cancel": {
+        "en": "Cancel",
+        "pt_BR": "Cancelar",
+        "es": "Cancelar",
+    },
+    "custom_edit": {
+        "en": "Edit",
+        "pt_BR": "Editar",
+        "es": "Editar",
+    },
+    "custom_delete": {
+        "en": "Remove",
+        "pt_BR": "Remover",
+        "es": "Eliminar",
+    },
+    "custom_delete_confirm": {
+        "en": "Remove '{name}' permanently?",
+        "pt_BR": "Remover '{name}' permanentemente?",
+        "es": "¿Eliminar '{name}' permanentemente?",
+    },
+    "custom_error_name": {
+        "en": "Give it a short name (up to 60 characters).",
+        "pt_BR": "Dê um nome curto (até 60 caracteres).",
+        "es": "Déle un nombre corto (hasta 60 caracteres).",
+    },
+    "custom_error_url": {
+        "en": "URL must start with http(s):// and contain {query}.",
+        "pt_BR": "A URL deve começar com http(s):// e conter {query}.",
+        "es": "La URL debe empezar con http(s):// y contener {query}.",
+    },
+    "custom_error_icon": {
+        "en": "Icon file not found.",
+        "pt_BR": "Arquivo de ícone não encontrado.",
+        "es": "Archivo de icono no encontrado.",
+    },
+    "cli_custom_help": {
+        "en": "manage custom search providers",
+        "pt_BR": "gerenciar provedores de busca personalizados",
+        "es": "gestionar proveedores de búsqueda personalizados",
+    },
+    "cli_custom_list_help": {
+        "en": "list custom providers",
+        "pt_BR": "listar provedores personalizados",
+        "es": "listar proveedores personalizados",
+    },
+    "cli_custom_add_help": {
+        "en": "add a custom provider from a URL template",
+        "pt_BR": "adicionar um provedor personalizado a partir de uma URL",
+        "es": "añadir un proveedor personalizado desde una URL",
+    },
+    "cli_custom_remove_help": {
+        "en": "remove one or more custom providers",
+        "pt_BR": "remover um ou mais provedores personalizados",
+        "es": "eliminar uno o más proveedores personalizados",
+    },
+    "cli_custom_name_help": {
+        "en": "display name (e.g. 'My Forum')",
+        "pt_BR": "nome de exibição (ex.: 'Meu Fórum')",
+        "es": "nombre visible (p. ej. 'Mi Foro')",
+    },
+    "cli_custom_url_help": {
+        "en": "search URL template containing {query}",
+        "pt_BR": "URL de busca contendo {query}",
+        "es": "URL de búsqueda que contenga {query}",
+    },
+    "cli_custom_icon_help": {
+        "en": "custom icon image file (default: site favicon)",
+        "pt_BR": "arquivo de ícone personalizado (padrão: favicon do site)",
+        "es": "archivo de icono personalizado (predeterminado: favicon del sitio)",
+    },
+    "cli_custom_path_help": {
+        "en": "encode the term for a URL path (%20)",
+        "pt_BR": "codificar o termo para caminho de URL (%20)",
+        "es": "codificar el término para ruta URL (%20)",
+    },
+    "cli_custom_query_help": {
+        "en": "encode the term for a query string (+)",
+        "pt_BR": "codificar o termo para query string (+)",
+        "es": "codificar el término para query string (+)",
+    },
+    "cli_custom_empty": {
+        "en": "No custom providers yet.",
+        "pt_BR": "Nenhum provedor personalizado ainda.",
+        "es": "Aún no hay proveedores personalizados.",
+    },
+    "cli_custom_added": {
+        "en": "Custom provider added: {id} ({name})",
+        "pt_BR": "Provedor personalizado adicionado: {id} ({name})",
+        "es": "Proveedor personalizado añadido: {id} ({name})",
+    },
+    "cli_custom_removed": {
+        "en": "Custom provider(s) removed: {ids}",
+        "pt_BR": "Provedor(es) personalizado(s) removido(s): {ids}",
+        "es": "Proveedor(es) personalizado(s) eliminado(s): {ids}",
+    },
+    "cli_custom_not_found": {
+        "en": "Custom provider(s) not found: {ids}",
+        "pt_BR": "Provedor(es) personalizado(s) não encontrado(s): {ids}",
+        "es": "Proveedor(es) personalizado(s) no encontrado(s): {ids}",
+    },
+    "cli_custom_bad_name": {
+        "en": "Invalid name: use up to 60 characters.",
+        "pt_BR": "Nome inválido: use até 60 caracteres.",
+        "es": "Nombre inválido: use hasta 60 caracteres.",
+    },
+    "cli_custom_bad_url": {
+        "en": "Invalid URL: it must start with http(s):// and contain {query}.",
+        "pt_BR": "URL inválida: deve começar com http(s):// e conter {query}.",
+        "es": "URL inválida: debe empezar con http(s):// y contener {query}.",
+    },
+    "cli_custom_bad_icon": {
+        "en": "Icon file not found.",
+        "pt_BR": "Arquivo de ícone não encontrado.",
+        "es": "Archivo de icono no encontrado.",
+    },
     "cli_description": {
         "en": "Configure the GNOME web search provider (no GUI required).",
         "pt_BR": "Configure o provedor de busca web do GNOME (sem interface gráfica).",
