@@ -120,6 +120,44 @@ D-Bus service into `~/.local`:
 sh install-local.sh
 ```
 
+### Uninstall
+
+Remove the package, launchers, GSettings schema, desktop entries, D-Bus
+service and the provider manifest from both `~/.local` and `/usr/local`:
+
+```bash
+sh uninstall.sh
+```
+
+Remote one-liner:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/uninstall.sh | sh
+```
+
+Purge form (also deletes custom providers, settings and the favicon cache):
+
+```bash
+sh uninstall.sh --purge
+```
+
+Remote purge:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/uninstall.sh | sh -s -- --purge
+```
+
+User config (`~/.config/gnome-web-search-provider/`) and cache
+(`~/.cache/gnome-web-search-provider/`) are kept unless `--purge` is used.
+Log out and back in so GNOME Shell forgets the provider.
+
+If installed system-wide with `sudo pip install .`, remove the Python package
+with:
+
+```bash
+sudo pip uninstall gnome-web-search-provider
+```
+
 ### Activate the provider
 
 1. Log out and back in (or restart GNOME Shell) so the D-Bus service file and
