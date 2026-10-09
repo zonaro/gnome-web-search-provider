@@ -280,6 +280,7 @@
     <nav class="nav-links" aria-label="Primary">
       <a href="#features" data-i18n="nav.features">Features</a>
       <a href="#install" data-i18n="nav.install">Install</a>
+      <a href="#uninstall" data-i18n="nav.uninstall">Uninstall</a>
       <a href="#providers" data-i18n="nav.providers">Providers</a>
       <a href="#faq" data-i18n="nav.faq">FAQ</a>
     </nav>
@@ -320,7 +321,7 @@
           </div>
           <div class="terminal-body">
             <code id="installCmd">curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/install.sh | sh</code>
-            <button class="copy" id="copyBtn" type="button" aria-label="Copy install command" data-i18n="hero.copy">Copy</button>
+            <button class="copy" id="copyBtn" type="button" data-copy-target="installCmd" data-copy-key="hero" aria-label="Copy install command" data-i18n="hero.copy">Copy</button>
           </div>
         </div>
 
@@ -394,6 +395,29 @@
         <span data-i18n="install.check">Not showing up? Run</span>
         <code class="inline-code">gsettings get org.gnome.desktop.search-providers disabled</code>
       </p>
+    </div>
+  </section>
+
+  <section class="section" id="uninstall">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 data-i18n="uninstall.title">Clean removal in one command</h2>
+        <p data-i18n="uninstall.subtitle">Changed your mind? Take everything back out — package, schema, launchers and provider manifest.</p>
+      </div>
+      <div class="terminal" style="max-width:760px;margin:0 auto">
+        <div class="terminal-bar">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="terminal-label" data-i18n="uninstall.termLabel">One-line uninstall</span>
+        </div>
+        <div class="terminal-body">
+          <code id="uninstallCmd">curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/uninstall.sh | sh</code>
+          <button class="copy" id="uninstallCopyBtn" type="button" data-copy-target="uninstallCmd" data-copy-key="uninstall" aria-label="Copy uninstall command" data-i18n="uninstall.copy">Copy</button>
+        </div>
+      </div>
+      <div class="install-note" style="max-width:760px;margin:24px auto 0">
+        <strong data-i18n="uninstall.notet">Want a clean slate?</strong>
+        <span data-i18n="uninstall.note">Append -s -- --purge to the command to also delete your custom providers, settings and the favicon cache. Log out and back in afterwards for GNOME Shell to forget the provider.</span>
+      </div>
     </div>
   </section>
 
@@ -504,7 +528,7 @@
     "en": {
       "a11y.skip": "Skip to content",
       "a11y.theme": "Toggle theme",
-      "nav.features": "Features", "nav.install": "Install", "nav.providers": "Providers", "nav.faq": "FAQ", "nav.star": "Star",
+      "nav.features": "Features", "nav.install": "Install", "nav.uninstall": "Uninstall", "nav.providers": "Providers", "nav.faq": "FAQ", "nav.star": "Star",
       "hero.badge": "GNOME Shell extension",
       "hero.title": "Search the web from your GNOME desktop",
       "hero.subtitle": "Pick one or many search engines and search straight from the Activities Overview. Press Enter and the result opens in your browser.",
@@ -529,6 +553,11 @@
       "install.s3t": "Enable your engines", "install.s3d": "Open Settings → Search, or launch the providers app from the app grid.",
       "install.notet": "sudo is used once.", "install.note": "It only copies the search-provider manifest into /usr/local/share, because GNOME Shell scans system data directories for providers.",
       "install.check": "Not showing up? Run",
+      "uninstall.title": "Clean removal in one command",
+      "uninstall.subtitle": "Changed your mind? Take everything back out — package, schema, launchers and provider manifest.",
+      "uninstall.termLabel": "One-line uninstall", "uninstall.copy": "Copy", "uninstall.copied": "Copied!",
+      "uninstall.notet": "Want a clean slate?",
+      "uninstall.note": "Append -s -- --purge to the command to also delete your custom providers, settings and the favicon cache. Log out and back in afterwards for GNOME Shell to forget the provider.",
       "providers.title": "52 providers, seven categories",
       "providers.subtitle": "Enable any combination — up to five at a time.",
       "providers.note": "Kagi may show a sign-in wall; You.com works anonymously.",
@@ -538,7 +567,7 @@
       "limit.body": "GNOME Shell renders at most five results per search provider — a hard limit in the Shell itself, not in this extension. Because each engine adds its own result row, the app caps enabling at five and explains when you try a sixth. Nothing is broken; it's the platform.",
       "faq.title": "Frequently asked questions",
       "faq.q1": "Does it send my data anywhere?", "faq.a1": "No. Everything runs locally. When you press Enter, your browser opens the search URL — just like typing it yourself.",
-      "faq.q2": "How do I uninstall it?", "faq.a2": "Remove the package, launchers, schema and desktop files from ~/.local, then delete the provider manifest in ~/.local/share/gnome-shell/search-providers/ and the copy in /usr/local/share/gnome-shell/search-providers/.",
+      "faq.q2": "How do I uninstall it?", "faq.a2": "Run the one-line uninstaller: curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/uninstall.sh | sh. It removes the package, launchers, schema, desktop entries and the provider manifest from ~/.local and /usr/local. Append -s -- --purge to also delete your custom providers, settings and favicon cache. From a clone you can run sh uninstall.sh (or sh uninstall.sh --purge).",
       "faq.q3": "Which browsers are supported?", "faq.a3": "Any browser or command. The default is xdg-open; you can set firefox, google-chrome, or even \"flatpak run org.mozilla.firefox\".",
       "faq.q4": "Does it work on Wayland?", "faq.a4": "Yes. It is a regular search provider, so it behaves the same on Wayland and X11.",
       "faq.q5": "Why does the installer need sudo?", "faq.a5": "GNOME Shell 40+ only scans system data directories for search providers, so the provider manifest must live in /usr/local/share. That single copy needs root.",
@@ -548,7 +577,7 @@
     "pt-BR": {
       "a11y.skip": "Pular para o conteudo",
       "a11y.theme": "Alternar tema",
-      "nav.features": "Recursos", "nav.install": "Instalar", "nav.providers": "Provedores", "nav.faq": "FAQ", "nav.star": "Estrela",
+      "nav.features": "Recursos", "nav.install": "Instalar", "nav.uninstall": "Desinstalar", "nav.providers": "Provedores", "nav.faq": "FAQ", "nav.star": "Estrela",
       "hero.badge": "Extensão do GNOME Shell",
       "hero.title": "Busque na web direto do seu GNOME",
       "hero.subtitle": "Escolha um ou vários mecanismos de busca e pesquise pela Visão de Atividades. Aperte Enter e o resultado abre no seu navegador.",
@@ -573,6 +602,11 @@
       "install.s3t": "Ative seus mecanismos", "install.s3d": "Abra Configurações → Pesquisa, ou rode o app de provedores na grade de aplicativos.",
       "install.notet": "O sudo é usado uma vez.", "install.note": "Ele apenas copia o manifesto do provedor para /usr/local/share, porque o GNOME Shell varre diretórios de dados do sistema.",
       "install.check": "Não apareceu? Rode",
+      "uninstall.title": "Remoção limpa em um comando",
+      "uninstall.subtitle": "Mudou de ideia? Remove tudo de volta — pacote, schema, lançadores e o manifesto do provedor.",
+      "uninstall.termLabel": "Desinstalação em uma linha", "uninstall.copy": "Copiar", "uninstall.copied": "Copiado!",
+      "uninstall.notet": "Quer começar do zero?",
+      "uninstall.note": "Anexe -s -- --purge ao comando para apagar também seus provedores personalizados, configurações e o cache de favicons. Saia e entre de novo depois para o GNOME Shell esquecer o provedor.",
       "providers.title": "52 provedores, sete categorias",
       "providers.subtitle": "Ative qualquer combinação — até cinco por vez.",
       "providers.note": "O Kagi pode exigir login; o You.com funciona anonimamente.",
@@ -582,7 +616,7 @@
       "limit.body": "O GNOME Shell exibe no máximo cinco resultados por provedor de busca — um limite do próprio Shell, não desta extensão. Como cada mecanismo adiciona sua própria linha, o app limita a ativação a cinco e avisa quando você tenta o sexto. Não há nada quebrado; é a plataforma.",
       "faq.title": "Perguntas frequentes",
       "faq.q1": "Ele envia meus dados para algum lugar?", "faq.a1": "Não. Tudo roda localmente. Ao apertar Enter, seu navegador abre a URL de busca — como se você a digitasse.",
-      "faq.q2": "Como desinstalo?", "faq.a2": "Remova o pacote, os lançadores, o schema e os arquivos .desktop de ~/.local e apague o manifesto em ~/.local/share/gnome-shell/search-providers/ e a cópia em /usr/local/share/gnome-shell/search-providers/.",
+      "faq.q2": "Como desinstalo?", "faq.a2": "Rode o desinstalador em uma linha: curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/uninstall.sh | sh. Ele remove o pacote, os lançadores, o schema, os arquivos .desktop e o manifesto do provedor de ~/.local e /usr/local. Anexe -s -- --purge para apagar também seus provedores personalizados, configurações e o cache de favicons. De um clone, rode sh uninstall.sh (ou sh uninstall.sh --purge).",
       "faq.q3": "Quais navegadores são suportados?", "faq.a3": "Qualquer navegador ou comando. O padrão é xdg-open; você pode definir firefox, google-chrome ou até \"flatpak run org.mozilla.firefox\".",
       "faq.q4": "Funciona no Wayland?", "faq.a4": "Sim. É um provedor de busca comum, então se comporta igual no Wayland e no X11.",
       "faq.q5": "Por que o instalador precisa de sudo?", "faq.a5": "O GNOME Shell 40+ só varre diretórios de dados do sistema, então o manifesto do provedor precisa ficar em /usr/local/share. Essa única cópia exige root.",
@@ -592,7 +626,7 @@
     "es": {
       "a11y.skip": "Saltar al contenido",
       "a11y.theme": "Cambiar tema",
-      "nav.features": "Características", "nav.install": "Instalar", "nav.providers": "Proveedores", "nav.faq": "FAQ", "nav.star": "Estrella",
+      "nav.features": "Características", "nav.install": "Instalar", "nav.uninstall": "Desinstalar", "nav.providers": "Proveedores", "nav.faq": "FAQ", "nav.star": "Estrella",
       "hero.badge": "Extensión de GNOME Shell",
       "hero.title": "Busca en la web desde tu escritorio GNOME",
       "hero.subtitle": "Elige uno o varios motores de búsqueda y busca desde la Vista de Actividades. Pulsa Enter y el resultado se abre en tu navegador.",
@@ -617,6 +651,11 @@
       "install.s3t": "Activa tus motores", "install.s3d": "Abre Configuración → Búsqueda, o ejecuta la app de proveedores desde la cuadrícula.",
       "install.notet": "sudo se usa una vez.", "install.note": "Solo copia el manifiesto del proveedor a /usr/local/share, porque GNOME Shell escanea directorios de datos del sistema.",
       "install.check": "¿No aparece? Ejecuta",
+      "uninstall.title": "Eliminación limpia en un comando",
+      "uninstall.subtitle": "¿Cambiaste de opinión? Quita todo lo instalado — paquete, esquema, lanzadores y el manifiesto del proveedor.",
+      "uninstall.termLabel": "Desinstalación en una línea", "uninstall.copy": "Copiar", "uninstall.copied": "¡Copiado!",
+      "uninstall.notet": "¿Quieres empezar de cero?",
+      "uninstall.note": "Añade -s -- --purge al comando para borrar también tus proveedores personalizados, ajustes y la caché de favicons. Cierra sesión y vuelve a entrar después para que GNOME Shell olvide el proveedor.",
       "providers.title": "52 proveedores, siete categorías",
       "providers.subtitle": "Activa cualquier combinación — hasta cinco a la vez.",
       "providers.note": "Kagi puede pedir inicio de sesión; You.com funciona de forma anónima.",
@@ -626,7 +665,7 @@
       "limit.body": "GNOME Shell muestra como máximo cinco resultados por proveedor de búsqueda — un límite del propio Shell, no de esta extensión. Como cada motor añade su propia fila, la app limita la activación a cinco y avisa cuando intentas el sexto. No hay nada roto; es la plataforma.",
       "faq.title": "Preguntas frecuentes",
       "faq.q1": "¿Envía mis datos a algún lugar?", "faq.a1": "No. Todo se ejecuta localmente. Al pulsar Enter, tu navegador abre la URL de búsqueda, como si la escribieras tú.",
-      "faq.q2": "¿Cómo lo desinstalo?", "faq.a2": "Elimina el paquete, los lanzadores, el esquema y los .desktop de ~/.local y borra el manifiesto en ~/.local/share/gnome-shell/search-providers/ y la copia en /usr/local/share/gnome-shell/search-providers/.",
+      "faq.q2": "¿Cómo lo desinstalo?", "faq.a2": "Ejecuta el desinstalador en una línea: curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/uninstall.sh | sh. Elimina el paquete, los lanzadores, el esquema, los .desktop y el manifiesto del proveedor de ~/.local y /usr/local. Añade -s -- --purge para borrar también tus proveedores personalizados, ajustes y la caché de favicons. Desde un clon, ejecuta sh uninstall.sh (o sh uninstall.sh --purge).",
       "faq.q3": "¿Qué navegadores son compatibles?", "faq.a3": "Cualquier navegador o comando. El predeterminado es xdg-open; puedes usar firefox, google-chrome o incluso \"flatpak run org.mozilla.firefox\".",
       "faq.q4": "¿Funciona en Wayland?", "faq.a4": "Sí. Es un proveedor de búsqueda normal, así que se comporta igual en Wayland y X11.",
       "faq.q5": "¿Por qué el instalador necesita sudo?", "faq.a5": "GNOME Shell 40+ solo escanea directorios de datos del sistema, así que el manifiesto debe estar en /usr/local/share. Esa única copia necesita root.",
@@ -671,8 +710,12 @@
     for (var k = 0; k < btns.length; k++) {
       btns[k].setAttribute("aria-pressed", btns[k].getAttribute("data-lang") === locale ? "true" : "false");
     }
-    var copy = document.getElementById("copyBtn");
-    if (copy && !copy.dataset.busy) copy.textContent = dict["hero.copy"];
+    var copies = document.querySelectorAll("button.copy[data-copy-target]");
+    for (var c = 0; c < copies.length; c++) {
+      if (!copies[c].dataset.busy) {
+        copies[c].textContent = dict[(copies[c].getAttribute("data-copy-key") || "hero") + ".copy"];
+      }
+    }
     try { localStorage.setItem("gwsp.locale", locale); } catch (e) {}
   }
 
@@ -693,27 +736,34 @@
   }
 
   function initCopy() {
-    var btn = document.getElementById("copyBtn");
-    if (!btn) return;
-    btn.addEventListener("click", function () {
-      var cmd = document.getElementById("installCmd").textContent.trim();
-      var dict = I18N[current] || I18N.en;
-      var done = function () {
-        btn.dataset.busy = "1";
-        btn.textContent = dict["hero.copied"];
-        showToast(dict["hero.copied"]);
-        setTimeout(function () {
-          delete btn.dataset.busy;
-          btn.textContent = (I18N[current] || I18N.en)["hero.copy"];
-        }, 1800);
-      };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(cmd).then(done, function () { legacyCopy(cmd); done(); });
-      } else {
-        legacyCopy(cmd);
-        done();
-      }
-    });
+    var buttons = document.querySelectorAll("button.copy[data-copy-target]");
+    for (var i = 0; i < buttons.length; i++) {
+      (function (btn) {
+        var targetId = btn.getAttribute("data-copy-target");
+        var key = btn.getAttribute("data-copy-key") || "hero";
+        btn.addEventListener("click", function () {
+          var target = document.getElementById(targetId);
+          if (!target) return;
+          var cmd = target.textContent.trim();
+          var dict = I18N[current] || I18N.en;
+          var done = function () {
+            btn.dataset.busy = "1";
+            btn.textContent = dict[key + ".copied"];
+            showToast(dict[key + ".copied"]);
+            setTimeout(function () {
+              delete btn.dataset.busy;
+              btn.textContent = (I18N[current] || I18N.en)[key + ".copy"];
+            }, 1800);
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(cmd).then(done, function () { legacyCopy(cmd); done(); });
+          } else {
+            legacyCopy(cmd);
+            done();
+          }
+        });
+      })(buttons[i]);
+    }
   }
 
   function legacyCopy(text) {
