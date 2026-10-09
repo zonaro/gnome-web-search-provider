@@ -21,6 +21,14 @@ DEFAULT_ENABLED_PROVIDERS = ["google"]
 KEY_BROWSER = "browser"
 DEFAULT_BROWSER = "xdg-open"
 
+# GNOME Shell renders at most this many results per search provider
+# (``MAX_LIST_SEARCH_RESULTS_ROWS = 5`` in ``js/ui/search.js``, applied by
+# ``RemoteSearchProvider.filterResults()`` in ``js/ui/remoteSearch.js``).
+# This provider emits one result per enabled engine, so cap the enabled list
+# to the same number to keep the selection in sync with what the overview
+# can actually show.
+MAX_ENABLED_PROVIDERS = 5
+
 CONFIG_DIR_NAME = "gnome-web-search-provider"
 CONFIG_FILE_NAME = "config.json"
 CUSTOM_FILE_NAME = "custom_providers.json"
@@ -37,6 +45,21 @@ def _config_file_path() -> str:
 
 def _custom_file_path() -> str:
     return os.path.join(_config_dir(), CUSTOM_FILE_NAME)
+
+
+def _normalize_providers(providers: List[Any]) -> List[str]:
+    """Clean a provider id list: strip, drop empties/duplicates, cap at max.
+
+    Applied on both read and write so a list stored outside this app (an
+    older CLI, a manual ``gsettings set``) can never surface more entries
+    than GNOME Shell is able to render in the overview.
+    """
+    seen: List[str] = []
+    for pid in providers:
+        pid = str(pid).strip()
+        if pid and pid not in seen:
+            seen.append(pid)
+    return seen[:MAX_ENABLED_PROVIDERS]
 
 
 def _schema_available(schema_id: str = SCHEMA_ID) -> bool:
@@ -80,20 +103,17 @@ class ConfigManager:
 
     def get_enabled_providers(self) -> List[str]:
         if self._settings is not None:
-            return list(self._settings.get_strv(KEY_ENABLED_PROVIDERS))
+            return _normalize_providers(self._settings.get_strv(KEY_ENABLED_PROVIDERS))
         data = self._read_data()
         providers = data.get("enabled_providers", list(DEFAULT_ENABLED_PROVIDERS))
         if not isinstance(providers, list):
-            return list(DEFAULT_ENABLED_PROVIDERS)
-        return [str(p) for p in providers]
+            providers = list(DEFAULT_ENABLED_PROVIDERS)
+        return _normalize_providers(providers)
 
     def set_enabled_providers(self, providers: List[str]) -> None:
-        # Keep the list stable and free of duplicates/empty ids.
-        seen: List[str] = []
-        for pid in providers:
-            pid = str(pid).strip()
-            if pid and pid not in seen:
-                seen.append(pid)
+        # Keep the list stable, free of duplicates/empty ids, and never store
+        # more than GNOME Shell can display in the overview.
+        seen = _normalize_providers(providers)
         if self._settings is not None:
             self._settings.set_strv(KEY_ENABLED_PROVIDERS, seen)
             self._settings.sync()
@@ -107,9 +127,10 @@ class ConfigManager:
 
     def toggle_provider(self, provider_id: str, enabled: bool) -> None:
         current = self.get_enabled_providers()
-        if enabled and provider_id not in current:
-            current.append(provider_id)
-        elif not enabled and provider_id in current:
+        if enabled:
+            if provider_id not in current and len(current) < MAX_ENABLED_PROVIDERS:
+                current.append(provider_id)
+        elif provider_id in current:
             current.remove(provider_id)
         self.set_enabled_providers(current)
 
@@ -196,7 +217,7 @@ class ConfigManager:
         existing.append(entry)
         self.save_custom_providers(existing)
         current = self.get_enabled_providers()
-        if provider_id not in current:
+        if provider_id not in current and len(current) < MAX_ENABLED_PROVIDERS:
             current.append(provider_id)
             self.set_enabled_providers(current)
         return entry

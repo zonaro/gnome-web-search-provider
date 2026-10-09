@@ -87,12 +87,6 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "pt_BR": "Provedores de Busca Web",
         "es": "Proveedores de búsqueda web",
     },
-    "btn_all": {"en": "All", "pt_BR": "Todos", "es": "Todos"},
-    "btn_all_tooltip": {
-        "en": "Enable every search provider",
-        "pt_BR": "Habilitar todos os provedores de busca",
-        "es": "Habilitar todos los proveedores de búsqueda",
-    },
     "btn_none": {"en": "None", "pt_BR": "Nenhum", "es": "Ninguno"},
     "btn_none_tooltip": {
         "en": "Disable every search provider",
@@ -126,9 +120,14 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "es": "Comando para abrir los resultados, p. ej. xdg-open (predeterminado), firefox, google-chrome o 'flatpak run org.mozilla.firefox'. Pulse Enter para aplicar.",
     },
     "footer_text": {
-        "en": "Each enabled provider adds an entry to the GNOME Shell search results in the Activities overview.\nChanges are saved and applied immediately.",
-        "pt_BR": "Cada provedor habilitado adiciona uma entrada aos resultados de busca do GNOME Shell na visão de Atividades.\nAs alterações são salvas e aplicadas imediatamente.",
-        "es": "Cada proveedor habilitado añade una entrada a los resultados de búsqueda de GNOME Shell en la vista de Actividades.\nLos cambios se guardan y aplican de inmediato.",
+        "en": "Each enabled provider adds an entry to the GNOME Shell search results in the Activities overview. GNOME Shell shows at most 5 providers at a time.\nChanges are saved and applied immediately.",
+        "pt_BR": "Cada provedor habilitado adiciona uma entrada aos resultados de busca do GNOME Shell na visão de Atividades. O GNOME Shell mostra no máximo 5 provedores por vez.\nAs alterações são salvas e aplicadas imediatamente.",
+        "es": "Cada proveedor habilitado añade una entrada a los resultados de búsqueda de GNOME Shell en la vista de Actividades. GNOME Shell muestra como máximo 5 proveedores a la vez.\nLos cambios se guardan y aplican de inmediato.",
+    },
+    "limit_reached": {
+        "en": "GNOME Shell shows at most {max} providers. Turn one off to enable another.",
+        "pt_BR": "O GNOME Shell mostra no máximo {max} provedores. Desative um para habilitar outro.",
+        "es": "GNOME Shell muestra como máximo {max} proveedores. Desactiva uno para habilitar otro.",
     },
     "toggle_tooltip": {
         "en": "Toggle {name}",

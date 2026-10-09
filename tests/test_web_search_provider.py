@@ -32,6 +32,7 @@ from gnome_web_search_provider import dbus as dbus_mod  # noqa: E402
 from gnome_web_search_provider.config import (  # noqa: E402
     DEFAULT_BROWSER,
     DEFAULT_ENABLED_PROVIDERS,
+    MAX_ENABLED_PROVIDERS,
     ConfigManager,
 )
 from gnome_web_search_provider.providers import PROVIDERS  # noqa: E402
@@ -114,6 +115,16 @@ class TestWebSearchProvider(unittest.TestCase):
                 f"bing{RESULT_SEPARATOR}linux",
                 f"duckduckgo{RESULT_SEPARATOR}linux",
             ],
+        )
+
+    def test_daemon_caps_enabled_providers_at_max(self):
+        ids = ["google", "bing", "duckduckgo", "brave", "startpage", "ecosia", "qwant"]
+        provider = WebSearchProvider(config=FakeConfig(ids))
+        result = provider.GetInitialResultSet(["term"])
+        self.assertEqual(len(result), MAX_ENABLED_PROVIDERS)
+        self.assertEqual(
+            result,
+            [f"{pid}{RESULT_SEPARATOR}term" for pid in ids[:MAX_ENABLED_PROVIDERS]],
         )
 
     def test_empty_enabled_list_yields_no_results(self):
@@ -311,6 +322,26 @@ class TestConfigManager(_TempXdgMixin, unittest.TestCase):
         config = self.make_config()
         config.set_enabled_providers(["  google ", "google", "", "bing", "bing"])
         self.assertEqual(config.get_enabled_providers(), ["google", "bing"])
+
+    def test_set_enabled_providers_caps_at_max(self):
+        config = self.make_config()
+        ids = ["google", "bing", "duckduckgo", "brave", "startpage", "ecosia", "qwant"]
+        config.set_enabled_providers(ids)
+        self.assertEqual(config.get_enabled_providers(), ids[:MAX_ENABLED_PROVIDERS])
+
+    def test_get_enabled_providers_caps_at_max(self):
+        config = self.make_config()
+        ids = ["google", "bing", "duckduckgo", "brave", "startpage", "ecosia", "qwant"]
+        config._write_data({"enabled_providers": ids})
+        self.assertEqual(config.get_enabled_providers(), ids[:MAX_ENABLED_PROVIDERS])
+        self.assertEqual(self.make_config().get_enabled_providers(), ids[:MAX_ENABLED_PROVIDERS])
+
+    def test_toggle_refuses_sixth_provider(self):
+        config = self.make_config()
+        config.set_enabled_providers(["google", "bing", "duckduckgo", "brave", "startpage"])
+        config.toggle_provider("ecosia", True)
+        self.assertEqual(len(config.get_enabled_providers()), MAX_ENABLED_PROVIDERS)
+        self.assertNotIn("ecosia", config.get_enabled_providers())
 
     def test_toggle(self):
         config = self.make_config()

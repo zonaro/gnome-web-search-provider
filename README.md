@@ -16,8 +16,10 @@ open the chosen engine in your default browser.
 - 52 search providers, grouped by category (web, images, maps, videos,
   news, communities, media, reference/docs) — plus your own **custom
   providers** from any website.
-- Enable **any number of providers simultaneously** — they all appear as
-  separate entries in the search overview.
+- Enable **up to 5 providers simultaneously** — they all appear as separate
+  entries in the search overview. This is a GNOME Shell limit: the overview
+  renders at most 5 results per provider (see
+  [Known limitation](#known-limitation)).
 - **Google is the only provider enabled by default.**
 - Customize **which web browser** opens the results (default: your system
   browser via `xdg-open`) — useful for flatpaks, alternate browsers or
@@ -37,6 +39,20 @@ open the chosen engine in your default browser.
   Python, without pip-installed packages.
 - Search URLs verified in 2026 (including Google's new `udm=` verticals and
   Marginalia's new domain).
+
+## Known limitation
+
+The overview shows **at most 5 results per search provider**. That constant is
+hardcoded in GNOME Shell (`MAX_LIST_SEARCH_RESULTS_ROWS = 5` in
+`js/ui/search.js`, enforced by `RemoteSearchProvider.filterResults()` in
+`js/ui/remoteSearch.js`), and no GSettings key changes it; extra results are
+only summarized as "N more" on the provider header.
+
+This provider shows one entry per enabled engine, so enabling more than 5
+engines has no effect beyond the first five. To make that explicit, the
+preferences window, the CLI and the daemon all cap the enabled list at
+**5 providers** — the sixth toggle is refused with a message instead of being
+silently ignored.
 
 ## Available providers
 
@@ -144,8 +160,9 @@ gnome-web-search-provider-config
 ```
 
 Tick the providers you want — each one becomes an entry in the overview
-search. "All"/"None" enable or disable everything at once. Changes are
-written immediately.
+search. "None" clears the selection. GNOME Shell displays at most 5
+providers at a time, so the window caps the selection at 5 (turning on a
+sixth is refused with a hint). Changes are written immediately.
 
 ### CLI
 

@@ -44,7 +44,7 @@ except Exception:  # pragma: no cover - depends on optional PyGObject
     _HAS_ADW = False
 
 from . import favicons as _favicons  # noqa: E402
-from .config import ConfigManager  # noqa: E402
+from .config import MAX_ENABLED_PROVIDERS, ConfigManager  # noqa: E402
 from .providers import (  # noqa: E402
     CATEGORIES,
     CUSTOM_CATEGORY,
@@ -185,11 +185,6 @@ else:
             toolbar = Gtk.HeaderBar()
             self.set_titlebar(toolbar)
 
-            select_all = Gtk.Button(label=tr("btn_all"))
-            select_all.set_tooltip_text(tr("btn_all_tooltip"))
-            select_all.connect("clicked", self._on_select_all)
-            toolbar.pack_start(select_all)
-
             select_none = Gtk.Button(label=tr("btn_none"))
             select_none.set_tooltip_text(tr("btn_none_tooltip"))
             select_none.connect("clicked", self._on_select_none)
@@ -248,13 +243,13 @@ else:
             browser_box.append(self._browser_entry)
             root.append(browser_box)
 
-            footer = Gtk.Label(
+            self._footer = Gtk.Label(
                 label=tr("footer_text"),
                 wrap=True,
             )
-            footer.set_halign(Gtk.Align.START)
-            footer.get_style_context().add_class("footer")
-            root.append(footer)
+            self._footer.set_halign(Gtk.Align.START)
+            self._footer.get_style_context().add_class("footer")
+            root.append(self._footer)
 
             self._populate()
             self._refresh_favicons(force=False)
@@ -505,8 +500,18 @@ else:
             if self._updating:
                 return
             active = switch.get_active()
+            if active and len(self._config.get_enabled_providers()) >= MAX_ENABLED_PROVIDERS:
+                self._updating = True
+                try:
+                    switch.set_active(False)
+                finally:
+                    self._updating = False
+                self._update_card_style(card, False)
+                self._footer.set_text(tr("limit_reached", max=MAX_ENABLED_PROVIDERS))
+                return
             self._config.toggle_provider(provider_id, active)
             self._update_card_style(card, active)
+            self._footer.set_text(tr("footer_text"))
 
         def _on_card_pressed(self, _button: Gtk.Button, provider_id: str) -> None:
             switch = self._switches.get(provider_id)
@@ -547,9 +552,6 @@ else:
                         self._update_card_style(parent, enabled)
             finally:
                 self._updating = False
-
-        def _on_select_all(self, *_args) -> None:
-            self._set_all(True)
 
         def _on_select_none(self, *_args) -> None:
             self._set_all(False)

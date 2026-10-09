@@ -19,7 +19,7 @@ import shlex
 import subprocess
 from typing import Dict, List, Tuple
 
-from .config import DEFAULT_BROWSER, ConfigManager
+from .config import DEFAULT_BROWSER, MAX_ENABLED_PROVIDERS, ConfigManager
 from .dbus import DBusService, Variant
 from . import favicons as _favicons
 from .providers import PROVIDERS, SearchProvider, all_providers, fallback_icon_name
@@ -134,10 +134,15 @@ class WebSearchProvider(object):
     # ------------------------------------------------------------- helpers
 
     def _enabled_ids(self) -> List[str]:
-        """Provider ids currently enabled, filtered to known providers."""
+        """Provider ids currently enabled, filtered to known providers.
+
+        Capped at ``MAX_ENABLED_PROVIDERS``: GNOME Shell only renders the
+        first five results of a provider in the overview, so anything beyond
+        that would never be reachable.
+        """
         enabled = self._config.get_enabled_providers()
         known = self._all_providers()
-        return [pid for pid in enabled if pid in known]
+        return [pid for pid in enabled if pid in known][:MAX_ENABLED_PROVIDERS]
 
     def _result_ids(self, query: str) -> List[str]:
         return [f"{pid}{RESULT_SEPARATOR}{query}" for pid in self._enabled_ids()]
