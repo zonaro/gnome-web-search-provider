@@ -808,7 +808,9 @@ else:
             # pin the style manager to PREFER so dark mode is always honored.
             if _HAS_ADW:
                 try:
-                    Adw.StyleManager.get_default().set_color_scheme(Adw.ColorScheme.PREFER)
+                    # libadwaita renomeou o antigo ``PREFER`` para ``DEFAULT``
+                    # (seguir o esquema de cor do sistema, que inclui o modo escuro).
+                    Adw.StyleManager.get_default().set_color_scheme(Adw.ColorScheme.DEFAULT)
                 except Exception:
                     pass
             _BaseApp.do_startup(self)
