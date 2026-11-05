@@ -1,19 +1,26 @@
-# 🌐 GNOME Web Search Provider
+# GNOME Web Search Provider
 
 A GNOME Shell search provider that lets you search the web directly from the
 Activities Overview (the `Super` key search box), choosing **one or more
-search engines at the same time** — Google, Bing, DuckDuckGo, Brave, Startpage
-and many more.
+search destinations at the same time** — from Google and DuckDuckGo to
+Perplexity, ChatGPT, Claude and Grok. The catalog contains **56 built-in
+providers**, plus custom URL templates.
 
 Every enabled provider shows its own result entry in the overview
 ("Search Google for 'linux'", "Search Bing for 'linux'", ...). Press Enter to
-open the chosen engine in your default browser.
+open the chosen destination in your configured browser. This is a **GNOME
+Activities Overview integration**, not a browser address-bar extension or an
+AI API client. Queries are encoded into URLs; the destination handles the
+search or chat using your browser session.
 
-![image](https://github.com/user-attachments/assets/9a26a63e-412f-4925-8a42-890878af3e00)
+[Website and installation guide](https://zonaro.github.io/gnome-web-search-provider/)
+· [Issue board](https://github.com/users/zonaro/projects/12)
+
+![GNOME Activities Overview with web search provider results](docs/assets/overview.png)
 
 ## Features
 
-- 52 search providers, grouped by category (web, images, maps, videos,
+- 56 built-in providers, grouped by category (web, images, maps, videos,
   news, communities, media, reference/docs) — plus your own **custom
   providers** from any website.
 - Enable **up to 5 providers simultaneously** — they all appear as separate
@@ -34,11 +41,13 @@ open the chosen engine in your default browser.
   `gsettings`, with a transparent JSON fallback
   (`~/.config/gnome-web-search-provider/config.json`) when the schema is not
   installed.
-- **Zero runtime dependencies** beyond Python's standard library: the D-Bus
-  service is implemented from scratch, so it runs on any Linux box with
-  Python, without pip-installed packages.
-- Search URLs verified in 2026 (including Google's new `udm=` verticals and
-  Marginalia's new domain).
+- **Standard-library-only daemon and CLI**: no pip-installed dependencies.
+  GNOME Shell integration requires GNOME; the preferences window also needs
+  GTK4 and PyGObject.
+- Preferences and result labels support **English, Brazilian Portuguese and
+  Spanish**, with language detection and English fallback.
+- URL templates include Google's `udm=` verticals and AI destinations.
+  External services can change their URL behavior independently of this app.
 
 ## Known limitation
 
@@ -66,8 +75,43 @@ silently ignored.
 | **Media** | YouTube, YouTube Music, Spotify, Deezer, Tidal, IMDb, Steam |
 | **Reference & Tech** | Wikipedia, Wiktionary, WolframAlpha, PyPI, MDN Web Docs, Docker Hub, Internet Archive, Arch Wiki |
 
-> Kagi may show a sign-in wall for anonymous searches (it needs a Kagi
-> account); You.com works anonymously.
+Kagi requires an account; other services may also require sign-in, accept
+terms, impose usage limits or restrict availability by region.
+
+### AI search and chat destinations
+
+Perplexity and You.com were already included. The catalog now also contains:
+
+| Provider ID | Display name | URL template |
+|---|---|---|
+| `chatgpt` | ChatGPT Search | `https://chatgpt.com/?q={query}` |
+| `claude` | Claude | `https://claude.ai/new?q={query}` |
+| `grok` | Grok | `https://grok.com/?q={query}` |
+| `copilot` | Microsoft Copilot Search | `https://www.bing.com/search?q={query}&copilot=on` |
+
+These are browser URL templates, **not API integrations**. Depending on the
+service and your signed-in session, a URL may prefill a prompt, require manual
+submission or open standard search. The display name does not guarantee that
+web-search mode is selected. URL encoding is covered by automated tests;
+end-to-end prompt submission and forced AI search for these four templates
+have **not been verified**. No API key is needed by this application.
+
+For example, after installation:
+
+```bash
+gnome-web-search-provider-cli set google perplexity chatgpt
+```
+
+Press `Super`, type a query, then choose the destination. This replaces the
+enabled set but does not change your browser's default search engine.
+
+### Privacy and network requests
+
+Activating a result opens a URL containing your query in the browser, which
+sends it to the selected service under that service's privacy policy. Settings
+are stored locally. The installer and preferences app can also download site
+favicons; fallback icon requests may contact Google or DuckDuckGo and include
+the provider's domain (not your search query).
 
 ## Requirements
 
@@ -79,6 +123,8 @@ silently ignored.
 - The preferences **window** additionally needs `PyGObject` with GTK4
   bindings (`gi`); without it the daemon and CLI still work, and the window
   prints a friendly message instead of crashing.
+- libadwaita is optional for native theme integration; the preferences window
+  falls back to GTK4 when it is unavailable.
 
 **Fedora:**
 ```bash
@@ -96,6 +142,23 @@ sudo apt install python3-gi gir1.2-gtk-4.0 libgirepository1.0-dev
 
 ## Installation
 
+### Quick install from GitHub
+
+On a GNOME desktop with the requirements above installed:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/install.sh | sh
+```
+
+This downloads the source and runs `install-local.sh`. Review remote scripts
+before executing them. Most files are installed into `~/.local`, but **sudo is
+required** to register the search-provider manifest in `/usr/local/share`.
+Run it in a terminal where you can authenticate. Log out and back in afterward
+so GNOME Shell discovers the provider. Re-run the installer to update; it does
+not intentionally remove your settings or custom providers.
+
+### System-wide Python installation
+
 Install the Python package system-wide (the desktop/service files expect the
 binaries in `/usr/local/bin`):
 
@@ -111,7 +174,7 @@ sudo glib-compile-schemas /usr/local/share/glib-2.0/schemas/
 sudo update-desktop-database /usr/local/share/applications/
 ```
 
-### Install per-user (no root, no pip)
+### Install from a local checkout (no pip)
 
 `install-local.sh` copies the package, launchers, schema, desktop files and
 D-Bus service into `~/.local`:
@@ -119,6 +182,9 @@ D-Bus service into `~/.local`:
 ```bash
 sh install-local.sh
 ```
+
+The script also uses sudo for the system search-provider manifest; it is not
+entirely root-free. Run it from the repository root.
 
 ### Uninstall
 

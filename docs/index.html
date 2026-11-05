@@ -3,34 +3,64 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GNOME Web Search Provider — Search the web from your desktop</title>
-<meta name="description" content="A GNOME Shell search provider that lets you search the web straight from the Activities Overview, with one or many engines at once. One-line install, zero dependencies, MIT licensed.">
 <meta name="color-scheme" content="light dark">
+<title>GNOME Web Search Provider — Search the web from your desktop</title>
+<meta name="description" content="A GNOME Shell search provider that lets you search the web straight from the Activities Overview, choosing one or more of 56 engines at the same time. Install from one command; the daemon uses only Python's standard library. MIT licensed.">
+<link rel="canonical" href="https://zonaro.github.io/gnome-web-search-provider/">
+<link rel="sitemap" href="https://zonaro.github.io/gnome-web-search-provider/sitemap.xml">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://zonaro.github.io/gnome-web-search-provider/">
 <meta property="og:title" content="GNOME Web Search Provider">
-<meta property="og:description" content="Search the web from your GNOME desktop. Pick one or many engines and search straight from the Activities Overview.">
-<meta property="og:image" content="assets/overview.png">
+<meta property="og:description" content="Search the web from your GNOME desktop. Pick one or many of 56 engines and search straight from the Activities Overview. Results open in your default browser, including AI destinations such as ChatGPT Search, Claude, Grok and Microsoft Copilot Search.">
+<meta property="og:image" content="https://zonaro.github.io/gnome-web-search-provider/assets/overview.png">
+<meta property="og:image:width" content="2220">
+<meta property="og:image:height" content="400">
+<meta property="og:image:alt" content="GNOME Activities Overview showing web search results from several engines">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GNOME Web Search Provider">
+<meta name="twitter:description" content="Search the web from your GNOME desktop. Pick one or many of 56 engines and search straight from the Activities Overview. Results open in your default browser, including AI destinations such as ChatGPT Search, Claude, Grok and Microsoft Copilot Search.">
+<meta name="twitter:image" content="https://zonaro.github.io/gnome-web-search-provider/assets/overview.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='14' cy='14' r='9' fill='none' stroke='%233584e4' stroke-width='3'/%3E%3Cline x1='21' y1='21' x2='28' y2='28' stroke='%233584e4' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "GNOME Web Search Provider",
+  "applicationCategory": "Search",
+  "operatingSystem": "Linux",
+  "applicationSuite": "GNOME",
+  "author": { "@type": "Person", "name": "zonaro" },
+  "description": "A GNOME Shell search provider that lets you search the web straight from the Activities Overview, choosing one or more search engines at the same time.",
+  "url": "https://zonaro.github.io/gnome-web-search-provider/",
+  "image": "https://zonaro.github.io/gnome-web-search-provider/assets/overview.png",
+  "screenshot": "https://zonaro.github.io/gnome-web-search-provider/assets/overview.png",
+  "keywords": ["GNOME Shell", "search provider", "Activities Overview", "web search", "GSettings", "Python"],
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "license": "https://github.com/zonaro/gnome-web-search-provider/blob/master/LICENSE",
+  "isFamilyFriendly": true
+}
+</script>
 <style>
   :root {
-    --bg: #f6f7f9;
+    --bg: #f4f5f7;
     --surface: #ffffff;
-    --surface-2: #eef1f5;
-    --text: #191919;
-    --muted: #5c5f66;
-    --border: #e2e5ea;
+    --surface-2: #eef1f4;
+    --text: #1c1c1e;
+    --text-2: #4b4b50;
+    --muted: #6e6e73;
+    --border: #d4d4d9;
     --accent: #3584e4;
     --accent-hover: #1b6fd4;
     --accent-2: #9141ac;
-    --code-bg: #16181d;
-    --code-text: #e8eaed;
-    --shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 12px 32px rgba(15, 23, 42, .08);
-    --shadow-sm: 0 1px 2px rgba(15, 23, 42, .06);
-    --radius: 18px;
-    --radius-sm: 12px;
+    --accent-subtle: #e8f2ff;
+    --code-bg: #1e1e1e;
+    --code-text: #d4d4d9;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 8px 24px rgba(0, 0, 0, .06);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .06);
+    --radius: 14px;
+    --radius-sm: 10px;
     --maxw: 1080px;
-    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Cantarell, Ubuntu, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font: system-ui, -apple-system, BlinkMacSystemFont, "Cantarell", "Segoe UI", Ubuntu, Roboto, "Helvetica Neue", sans-serif;
     --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
@@ -39,14 +69,17 @@
       --surface: #1b1d21;
       --surface-2: #23262b;
       --text: #f1f2f4;
-      --muted: #a7abb4;
+      --text-2: #b9bcc4;
+      --muted: #8e9199;
       --border: #2c3036;
       --accent: #62a0ea;
       --accent-hover: #8ab9f0;
+      --accent-2: #b366d2;
+      --accent-subtle: #1c2a45;
       --code-bg: #0c0d10;
-      --code-text: #e8eaed;
-      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 16px 40px rgba(0, 0, 0, .45);
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, .5);
+      --code-text: #d4d4d9;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .6), 0 16px 40px rgba(0, 0, 0, .45);
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, .6);
     }
   }
   :root[data-theme="dark"] {
@@ -54,18 +87,21 @@
     --surface: #1b1d21;
     --surface-2: #23262b;
     --text: #f1f2f4;
-    --muted: #a7abb4;
+    --text-2: #b9bcc4;
+    --muted: #8e9199;
     --border: #2c3036;
     --accent: #62a0ea;
     --accent-hover: #8ab9f0;
+    --accent-2: #b366d2;
+    --accent-subtle: #1c2a45;
     --code-bg: #0c0d10;
-    --code-text: #e8eaed;
-    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 16px 40px rgba(0, 0, 0, .45);
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .5);
+    --code-text: #d4d4d9;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .6), 0 16px 40px rgba(0, 0, 0, .45);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .6);
   }
 
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; overflow-x: hidden; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   body {
     margin: 0;
@@ -80,18 +116,19 @@
   a:hover { text-decoration: underline; }
   img { max-width: 100%; display: block; }
   h1, h2, h3 { line-height: 1.2; margin: 0 0 .5em; letter-spacing: -.015em; }
-  h1 { font-size: clamp(2rem, 5vw, 3.3rem); font-weight: 800; }
+  h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; }
   h2 { font-size: clamp(1.5rem, 3.2vw, 2.1rem); font-weight: 700; }
-  h3 { font-size: 1.08rem; font-weight: 650; }
+  h3 { font-size: 1.1rem; font-weight: 650; }
   p { margin: 0 0 1rem; }
   .muted { color: var(--muted); }
-  .wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+  .text-2 { color: var(--text-2); }
+  .wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 20px; min-width: 0; }
   .center { text-align: center; }
-  .section { padding: 76px 0; }
-  .section-head { max-width: 640px; margin: 0 auto 44px; text-align: center; }
+  .section { padding: 72px 0; }
+  .section-head { max-width: 700px; margin: 0 auto 44px; text-align: center; }
   .section-head p { color: var(--muted); font-size: 1.05rem; margin: 0; }
   .skip-link { position: absolute; left: -9999px; }
-  .skip-link:focus { left: 12px; top: 12px; z-index: 100; background: var(--surface); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); }
+  .skip-link:focus { left: 12px; top: 12px; z-index: 100; background: var(--surface); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); color: var(--text); text-decoration: none; font-weight: 600; }
 
   /* ---------- nav ---------- */
   .nav {
@@ -100,14 +137,15 @@
     background: color-mix(in srgb, var(--bg) 82%, transparent);
     border-bottom: 1px solid var(--border);
   }
-  .nav-inner { display: flex; align-items: center; gap: 18px; height: 62px; }
+  .nav-inner { display: flex; align-items: center; gap: 12px; height: 60px; min-width: 0; }
   .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text); font-size: 1rem; }
   .brand:hover { text-decoration: none; }
   .brand svg { flex: none; }
-  .nav-links { display: flex; gap: 22px; margin-left: auto; }
+  .nav-links { display: flex; gap: 20px; margin-left: auto; align-items: center; }
   .nav-links a { color: var(--muted); font-size: .93rem; font-weight: 500; }
   .nav-links a:hover { color: var(--text); text-decoration: none; }
-  .nav-actions { display: flex; align-items: center; gap: 8px; }
+  .nav-actions { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .nav-actions > * { min-width: 0; }
   .icon-btn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 38px; height: 38px; border-radius: 10px;
@@ -115,11 +153,14 @@
     cursor: pointer;
   }
   .icon-btn:hover { background: var(--surface-2); }
+  .menu-btn { display: none; }
   :focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 2px; border-radius: 8px; }
-  .langs { display: inline-flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); }
+  .langs { display: inline-flex; border: 1px solid var(--border); border-radius: 10px; overflow-x: auto; overflow-y: hidden; background: var(--surface); scrollbar-width: none; -ms-overflow-style: none; }
+  .langs::-webkit-scrollbar { display: none; }
   .langs button {
     border: 0; background: transparent; color: var(--muted); cursor: pointer;
     padding: 7px 10px; font: inherit; font-size: .78rem; font-weight: 700; letter-spacing: .03em;
+    min-width: 0;
   }
   .langs button + button { border-left: 1px solid var(--border); }
   .langs button[aria-pressed="true"] { background: var(--accent); color: #fff; }
@@ -137,37 +178,40 @@
   .btn svg { flex: none; }
 
   /* ---------- hero ---------- */
-  .hero { position: relative; overflow: hidden; padding: 84px 0 56px; }
+  .hero { position: relative; overflow: hidden; padding: 80px 0 60px; }
   .hero::before {
-    content: ""; position: absolute; inset: -40% 0 auto 0; height: 620px; z-index: -1;
+    content: ""; position: absolute; inset: -45% 0 auto 0; height: 640px; z-index: -1;
     background:
       radial-gradient(52% 70% at 18% 22%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 70%),
       radial-gradient(46% 62% at 84% 12%, color-mix(in srgb, var(--accent-2) 22%, transparent), transparent 70%);
     filter: blur(4px);
   }
-  .hero-grid { display: grid; grid-template-columns: 1fr; gap: 44px; align-items: center; }
+  @supports not (color-mix(in srgb, red, transparent)) {
+    .hero::before { background: #3584e4; opacity: .12; }
+  }
+  .hero-grid { display: grid; grid-template-columns: 1fr; gap: 40px; align-items: center; }
   .pill {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 6px 13px; border-radius: 999px; border: 1px solid var(--border);
     background: var(--surface); color: var(--muted); font-size: .82rem; font-weight: 600;
   }
   .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
-  .hero h1 { margin: 18px 0 16px; }
-  .hero .lede { font-size: clamp(1.05rem, 2.1vw, 1.22rem); color: var(--muted); max-width: 34em; }
-  .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+  .hero h1 { margin: 16px 0 14px; }
+  .hero .lede { font-size: clamp(1.05rem, 2.1vw, 1.22rem); color: var(--text-2); max-width: 36em; line-height: 1.55; }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
 
-  .terminal { margin-top: 28px; border-radius: var(--radius-sm); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); }
+  .terminal { margin-top: 26px; border-radius: var(--radius-sm); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); }
   .terminal-bar { display: flex; align-items: center; gap: 7px; padding: 10px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
   .terminal-bar .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--border); }
   .terminal-bar .dot:nth-child(1) { background: #ff5f57; }
   .terminal-bar .dot:nth-child(2) { background: #febc2e; }
   .terminal-bar .dot:nth-child(3) { background: #28c840; }
   .terminal-label { margin-left: auto; font-size: .74rem; color: var(--muted); font-weight: 600; letter-spacing: .02em; }
-  .terminal-body { display: flex; align-items: stretch; background: var(--code-bg); }
+  .terminal-body { display: flex; align-items: stretch; background: var(--code-bg); min-width: 0; }
   .terminal-body code {
-    flex: 1; padding: 16px 16px; color: var(--code-text); font-family: var(--mono);
-    font-size: .84rem; line-height: 1.55; overflow-x: auto; white-space: pre;
-    display: block;
+    flex: 1; min-width: 0; padding: 16px 16px; color: var(--code-text); font-family: var(--mono);
+    font-size: .84rem; line-height: 1.55; overflow-x: auto; white-space: pre-wrap; display: block;
+    overflow-wrap: anywhere;
   }
   .copy {
     flex: none; margin: 8px; padding: 0 16px; border: 0; border-radius: 9px;
@@ -176,10 +220,10 @@
   }
   .copy:hover { background: var(--accent-hover); }
   .hero-note { display: flex; gap: 8px; align-items: flex-start; margin-top: 14px; font-size: .86rem; color: var(--muted); }
-  .hero-note svg { flex: none; margin-top: 2px; }
+  .hero-note svg { flex: none; margin-top: 3px; }
 
-  .shot { margin: 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); background: var(--surface); }
-  .shot img { width: 100%; }
+  .shot { margin: 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); background: var(--surface); min-width: 0; }
+  .shot img { width: 100%; height: auto; display: block; }
 
   /* ---------- trust ---------- */
   .trust { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface); }
@@ -187,28 +231,32 @@
   .trust-grid span { display: inline-flex; align-items: center; gap: 9px; color: var(--muted); font-weight: 600; font-size: .9rem; }
   .trust-grid svg { color: var(--accent); }
 
-  /* ---------- cards / grid ---------- */
+  /* ---------- cards ---------- */
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+  @media (prefers-reduced-motion: reduce) { .card { transition: none; } }
+  .card:hover { border-color: var(--accent); box-shadow: var(--shadow); transform: translateY(-2px); }
   .card .ico {
     width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center;
     background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); margin-bottom: 14px;
   }
+  .card h3 { margin-bottom: 8px; }
   .card p { color: var(--muted); margin: 0; font-size: .94rem; }
 
   /* ---------- steps ---------- */
   #install { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; counter-reset: step; }
-  .step { position: relative; padding-left: 58px; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; counter-reset: step; }
+  .step { position: relative; padding-left: 56px; }
   .step .num {
     counter-increment: step; position: absolute; left: 0; top: 0;
     width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
     background: var(--accent); color: #fff; font-weight: 800;
   }
   .step .num::before { content: counter(step); }
-  .step p { color: var(--muted); font-size: .94rem; }
+  .step h3 { margin-bottom: 6px; font-size: 1rem; }
+  .step p { color: var(--muted); font-size: .94rem; margin: 0; }
   .inline-code { font-family: var(--mono); font-size: .82rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px; padding: 2px 7px; color: var(--text); }
-  .install-note { margin-top: 30px; padding: 16px 18px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--accent) 9%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border)); font-size: .9rem; color: var(--text); }
+  .install-note { margin-top: 28px; padding: 16px 18px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--accent) 9%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border)); font-size: .9rem; color: var(--text); }
 
   /* ---------- providers ---------- */
   .prov-cats { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
@@ -218,7 +266,14 @@
   .chip { padding: 5px 11px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); font-size: .83rem; color: var(--text); }
   .chip.def { border-color: var(--accent); color: var(--accent); font-weight: 650; }
 
+  /* ---------- AI callout ---------- */
+  .callout { border-radius: var(--radius); padding: 22px 24px; box-shadow: var(--shadow-sm); background: var(--surface); border: 1px solid var(--border); display: grid; grid-template-columns: 44px 1fr; gap: 14px 16px; align-items: start; }
+  .callout .ico { grid-row: 1 / 2; width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
+  .callout h3 { grid-column: 2; grid-row: 1; margin: 0 0 6px; font-size: 1.05rem; }
+  .callout p { grid-column: 2 / -1; grid-row: 2; margin: 0; color: var(--muted); font-size: .94rem; line-height: 1.5; }
+
   /* ---------- limitation ---------- */
+  #limit { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
   .limit-card {
     border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow);
     background: var(--surface); border: 1px solid var(--border);
@@ -229,14 +284,15 @@
 
   /* ---------- faq ---------- */
   #faq { background: var(--surface); border-top: 1px solid var(--border); }
-  .faq-list { max-width: 780px; margin: 0 auto; }
+  .faq-list { max-width: 800px; margin: 0 auto; }
   details { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); margin-bottom: 12px; overflow: hidden; }
-  details[open] { box-shadow: var(--shadow-sm); }
-  summary { cursor: pointer; padding: 16px 20px; font-weight: 650; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+  details[open] { box-shadow: var(--shadow-sm); background: var(--surface); }
+  summary { cursor: pointer; padding: 16px 20px; font-weight: 650; list-style: none; display: flex; justify-content: space-between; gap: 16px; color: var(--text); }
   summary::-webkit-details-marker { display: none; }
   summary::after { content: "+"; color: var(--accent); font-weight: 800; font-size: 1.15rem; line-height: 1; }
   details[open] summary::after { content: "\2212"; }
-  details .answer { padding: 0 20px 18px; color: var(--muted); font-size: .95rem; }
+  details .answer { padding: 0 20px 18px; color: var(--muted); font-size: .95rem; line-height: 1.55; overflow-wrap: anywhere; }
+  details .answer strong { color: var(--text); }
 
   /* ---------- footer ---------- */
   footer { padding: 44px 0; border-top: 1px solid var(--border); }
@@ -253,18 +309,31 @@
   }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+  @media (min-width: 720px) {
+    .hero-grid { gap: 48px; }
+  }
   @media (min-width: 900px) {
-    .hero-grid { grid-template-columns: 1.05fr .95fr; gap: 48px; }
+    .hero-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 52px; }
     .limit-card { grid-template-columns: auto 1fr; align-items: start; gap: 24px; }
+    .menu-btn { display: none !important; }
   }
   @media (max-width: 720px) {
-    .nav-links { display: none; }
+    .nav-links { position: fixed; inset: 60px 0 0 0; background: var(--surface); border-bottom: 1px solid var(--border); flex-direction: column; padding: 24px; gap: 14px; box-shadow: var(--shadow); display: none; }
+    .nav-links.open { display: flex; }
+    .nav-links a { color: var(--text); font-size: 1rem; padding: 6px 0; }
+    .menu-btn { display: inline-flex; }
     .section { padding: 56px 0; }
+    .hero { padding: 64px 0 44px; }
     .terminal-body { flex-direction: column; }
     .copy { align-self: stretch; margin: 0; border-radius: 0; padding: 12px; }
+    .callout { grid-template-columns: 1fr; gap: 12px; }
+    .callout .ico { grid-row: 1; }
+    .callout h3 { grid-row: 2; }
+    .callout p { grid-row: 3; }
   }
   @media (prefers-reduced-motion: reduce) {
     .toast { transition: none; }
+    .card { transition: none; }
   }
 </style>
 </head>
@@ -273,11 +342,14 @@
 
 <header class="nav">
   <div class="wrap nav-inner">
+    <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks" data-i18n-aria="a11y.menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
     <a class="brand" href="#top" aria-label="GNOME Web Search Provider">
       <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><circle cx="14" cy="14" r="9" fill="none" stroke="var(--accent)" stroke-width="3"/><line x1="21" y1="21" x2="28" y2="28" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/></svg>
       <span>Web Search Provider</span>
     </a>
-    <nav class="nav-links" aria-label="Primary">
+    <nav class="nav-links" id="navLinks" aria-label="Primary">
       <a href="#features" data-i18n="nav.features">Features</a>
       <a href="#install" data-i18n="nav.install">Install</a>
       <a href="#uninstall" data-i18n="nav.uninstall">Uninstall</a>
@@ -305,9 +377,9 @@
   <section class="hero" id="top">
     <div class="wrap hero-grid">
       <div>
-        <span class="pill"><span class="dot"></span><span data-i18n="hero.badge">GNOME Shell extension</span></span>
+        <span class="pill"><span class="dot"></span><span data-i18n="hero.badge">GNOME Shell search provider</span></span>
         <h1 data-i18n="hero.title">Search the web from your GNOME desktop</h1>
-        <p class="lede" data-i18n="hero.subtitle">Pick one or many search engines and search straight from the Activities Overview. Press Enter and the result opens in your browser.</p>
+        <p class="lede" data-i18n="hero.subtitle">Pick one or many search engines and search straight from the Activities Overview — the Super key search box. Press Enter and each result opens in your default browser.</p>
 
         <div class="hero-cta">
           <a class="btn btn-primary" href="#install" data-i18n="hero.cta">Install now</a>
@@ -327,7 +399,7 @@
 
         <p class="hero-note">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01" stroke-linecap="round"/></svg>
-          <span data-i18n="hero.note">Works on GNOME Shell 40+. The installer asks for sudo only to register the provider system-wide.</span>
+          <span data-i18n="hero.note">Works on GNOME Shell 40+. The installer requires sudo for system registration and legacy cleanup.</span>
         </p>
       </div>
       <figure class="shot">
@@ -339,9 +411,9 @@
   <section class="trust" aria-label="Highlights">
     <div class="wrap trust-grid">
       <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg><span data-i18n="trust.shell">GNOME Shell</span></span>
-      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="trust.deps">Zero dependencies</span></span>
+      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="trust.deps">Stdlib-only daemon</span></span>
       <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg><span data-i18n="trust.license">MIT licensed</span></span>
-      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span data-i18n="trust.providers">52 providers</span></span>
+      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span data-i18n="trust.providers">56 providers</span></span>
     </div>
   </section>
 
@@ -353,12 +425,12 @@
       </div>
       <div class="grid">
         <article class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div><h3 data-i18n="f1.t">Many engines at once</h3><p data-i18n="f1.d">Enable up to five search engines and get a dedicated result row for each one.</p></article>
-        <article class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 14 0 18M12 3c-2.5 2.5-2.5 14 0 18"/></svg></div><h3 data-i18n="f2.t">52 built-in providers</h3><p data-i18n="f2.d">Web, images, maps, news, communities, media and reference — all ready to go.</p></article>
+        <article class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 14 0 18M12 3c-2.5 2.5-2.5 14 0 18"/></svg></div><h3 data-i18n="f2.t">56 built-in providers</h3><p data-i18n="f2.d">Web, images, maps, news, communities, media and reference — all ready to go.</p></article>
         <article class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div><h3 data-i18n="f3.t">Custom providers</h3><p data-i18n="f3.d">Turn any website with a search box into a provider with its own URL template.</p></article>
         <article class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8"/></svg></div><h3 data-i18n="f4.t">Choose your browser</h3><p data-i18n="f4.d">Open results in Firefox, a Flatpak browser, or anything you can run from a command.</p></article>
         <article class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div><h3 data-i18n="f5.t">Native settings window</h3><p data-i18n="f5.d">A GTK4 preferences app with a searchable icon grid and instant switches.</p></article>
-        <article class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div><h3 data-i18n="f6.t">Zero dependencies</h3><p data-i18n="f6.d">Pure Python standard library — the D-Bus service is implemented from scratch.</p></article>
-        <article class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 6.8 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 13.9H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 7.2l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 3.1V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1.2z"/></svg></div><h3 data-i18n="f7.t">Native GSettings</h3><p data-i18n="f7.d">Script it with gsettings, with a transparent JSON fallback when the schema is absent.</p></article>
+        <article class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div><h3 data-i18n="f6.t">Daemon: Python stdlib only</h3><p data-i18n="f6.d">The D-Bus service uses only Python's standard library. The GTK4/PyGObject preferences window is optional.</p></article>
+        <article class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1A1.6 1.6 0 0 0 6.8 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 10 3.1V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.6 1.6 0 0 0 21 13.9H21a2 2 0 1 1 0-4h-.1a1.6 1.6 0 0 0-1.5 1.2z"/></svg></div><h3 data-i18n="f7.t">Native GSettings</h3><p data-i18n="f7.d">Script it with gsettings, with a transparent JSON fallback when the schema is absent.</p></article>
         <article class="card"><div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/></svg></div><h3 data-i18n="f8.t">Localized</h3><p data-i18n="f8.d">English, Brazilian Portuguese and Spanish, auto-detected.</p></article>
       </div>
     </div>
@@ -367,14 +439,14 @@
   <section class="section" id="install">
     <div class="wrap">
       <div class="section-head">
-        <h2 data-i18n="install.title">Install in under a minute</h2>
-        <p data-i18n="install.subtitle">No cloning, no pip, no build tools. One command.</p>
+        <h2 data-i18n="install.title">Install from one command</h2>
+        <p data-i18n="install.subtitle">No cloning, no pip, no build tools.</p>
       </div>
       <div class="steps">
         <div class="step">
           <span class="num" aria-hidden="true"></span>
           <h3 data-i18n="install.s1t">Run the one-liner</h3>
-          <p data-i18n="install.s1d">Paste the command above into a terminal. It downloads the latest version and installs it for your user.</p>
+          <p data-i18n="install.s1d">Paste the command into a terminal. It downloads the latest version and installs it for your user.</p>
         </div>
         <div class="step">
           <span class="num" aria-hidden="true"></span>
@@ -388,8 +460,8 @@
         </div>
       </div>
       <div class="install-note">
-        <strong data-i18n="install.notet">sudo is used once.</strong>
-        <span data-i18n="install.note">It only copies the search-provider manifest into /usr/local/share, because GNOME Shell scans system data directories for providers.</span>
+        <strong data-i18n="install.notet">Requires sudo.</strong>
+        <span data-i18n="install.note">The installer uses sudo to register the search-provider manifest system-wide (GNOME Shell scans system data directories) and for legacy cleanup. Review install-local.sh for the exact sudo steps.</span>
       </div>
       <p class="center muted" style="margin-top:26px;font-size:.9rem">
         <span data-i18n="install.check">Not showing up? Run</span>
@@ -416,7 +488,7 @@
       </div>
       <div class="install-note" style="max-width:760px;margin:24px auto 0">
         <strong data-i18n="uninstall.notet">Want a clean slate?</strong>
-        <span data-i18n="uninstall.note">Append -s -- --purge to the command to also delete your custom providers, settings and the favicon cache. Log out and back in afterwards for GNOME Shell to forget the provider.</span>
+        <span data-i18n="uninstall.note">Append -s -- --purge to also delete your custom providers, settings and favicon cache. Log out and back in afterwards for GNOME Shell to forget the provider.</span>
       </div>
     </div>
   </section>
@@ -424,14 +496,14 @@
   <section class="section" id="providers">
     <div class="wrap">
       <div class="section-head">
-        <h2 data-i18n="providers.title">52 providers, seven categories</h2>
+        <h2 data-i18n="providers.title">56 providers, seven categories</h2>
         <p data-i18n="providers.subtitle">Enable any combination — up to five at a time.</p>
       </div>
       <div class="prov-cats">
         <article class="prov-cat">
           <h3 data-i18n="cat.web">Web Search</h3>
           <div class="chips">
-            <span class="chip def">Google</span><span class="chip">Bing</span><span class="chip">DuckDuckGo</span><span class="chip">Brave Search</span><span class="chip">Startpage</span><span class="chip">Ecosia</span><span class="chip">Qwant</span><span class="chip">Yahoo</span><span class="chip">Mojeek</span><span class="chip">Yandex</span><span class="chip">Baidu</span><span class="chip">Naver</span><span class="chip">SearXNG</span><span class="chip">Yep</span><span class="chip">Swisscows</span><span class="chip">Marginalia</span><span class="chip">Perplexity</span><span class="chip">Kagi</span><span class="chip">You.com</span>
+            <span class="chip def">Google</span><span class="chip">Bing</span><span class="chip">DuckDuckGo</span><span class="chip">Brave Search</span><span class="chip">Startpage</span><span class="chip">Ecosia</span><span class="chip">Qwant</span><span class="chip">Yahoo</span><span class="chip">Mojeek</span><span class="chip">Yandex</span><span class="chip">Baidu</span><span class="chip">Naver</span><span class="chip">SearXNG</span><span class="chip">Yep</span><span class="chip">Swisscows</span><span class="chip">Marginalia</span><span class="chip">Perplexity</span><span class="chip">Kagi</span><span class="chip">You.com</span><span class="chip">ChatGPT Search</span><span class="chip">Claude</span><span class="chip">Grok</span><span class="chip">Microsoft Copilot Search</span>
           </div>
         </article>
         <article class="prov-cat">
@@ -471,6 +543,13 @@
           </div>
         </article>
       </div>
+      <section class="callout" aria-labelledby="ai-heading">
+        <div class="ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10.017 10.017 0 0 0 12 2"/><path d="M9 12h.01M15 12h.01M9.5 8.5l1 1M14.5 8.5l-1 1M12 16v4"/></svg></div>
+        <div>
+          <h3 id="ai-heading" data-i18n="ai.heading">AI entries: URL templates may prefill, require submit/sign-in</h3>
+          <p data-i18n="ai.body">ChatGPT Search, Claude, Grok and Microsoft Copilot Search appear in Web Search above. Their URL templates may prefill your query, open standard search results, or require sign-in or submit — behavior varies by service and session. No end-to-end verification or forced AI/web mode; enable like any other engine, up to five at a time.</p>
+        </div>
+      </section>
       <p class="center muted" style="margin-top:22px;font-size:.86rem" data-i18n="providers.note">Kagi may show a sign-in wall; You.com works anonymously.</p>
     </div>
   </section>
@@ -482,7 +561,7 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
           <span data-i18n="limit.title">Why only five at once?</span>
         </div>
-        <p data-i18n="limit.body">GNOME Shell renders at most five results per search provider — a hard limit in the Shell itself, not in this extension. Because each engine adds its own result row, the app caps enabling at five and explains when you try a sixth. Nothing is broken; it's the platform.</p>
+        <p data-i18n="limit.body">GNOME Shell renders at most five results per search provider — a hard limit in the Shell itself, not in this provider. Each engine adds its own result row, so the app caps enabling at five and explains when you try a sixth. Nothing is broken; it's the platform.</p>
       </div>
     </div>
   </section>
@@ -491,11 +570,13 @@
     <div class="wrap">
       <div class="section-head"><h2 data-i18n="faq.title">Frequently asked questions</h2></div>
       <div class="faq-list">
-        <details><summary data-i18n="faq.q1">Does it send my data anywhere?</summary><div class="answer" data-i18n="faq.a1">No. Everything runs locally. When you press Enter, your browser opens the search URL — just like typing it yourself.</div></details>
-        <details><summary data-i18n="faq.q2">How do I uninstall it?</summary><div class="answer" data-i18n="faq.a2">Remove the package, launchers, schema and desktop files from ~/.local, then delete the provider manifest in ~/.local/share/gnome-shell/search-providers/ and the copy in /usr/local/share/gnome-shell/search-providers/.</div></details>
-        <details><summary data-i18n="faq.q3">Which browsers are supported?</summary><div class="answer" data-i18n="faq.a3">Any browser or command. The default is xdg-open; you can set firefox, google-chrome, or even "flatpak run org.mozilla.firefox".</div></details>
-        <details><summary data-i18n="faq.q4">Does it work on Wayland?</summary><div class="answer" data-i18n="faq.a4">Yes. It is a regular search provider, so it behaves the same on Wayland and X11.</div></details>
-        <details><summary data-i18n="faq.q5">Why does the installer need sudo?</summary><div class="answer" data-i18n="faq.a5">GNOME Shell 40+ only scans system data directories for search providers, so the provider manifest must live in /usr/local/share. That single copy needs root.</div></details>
+        <details><summary data-i18n="faq.q1">Does it send my data anywhere?</summary><div class="answer" data-i18n="faq.a1">When you press Enter, your browser opens the search URL — just like typing it yourself — so the destination engine receives your query. The provider itself doesn't run a backend or require an API key. The installer and preferences window may fetch site favicons (including from Google/DuckDuckGo icon services) for display; see favicons.py. Review the source for exact network behavior.</div></details>
+        <details><summary data-i18n="faq.q2">How is it different from my browser address bar?</summary><div class="answer" data-i18n="faq.a2">It isn't a browser extension and doesn't touch your address bar. It adds search results to the GNOME Activities Overview (the Super key search box). Pressing Enter opens the chosen engine's results in your default browser.</div></details>
+        <details><summary data-i18n="faq.q3">Are ChatGPT, Claude, Grok and Copilot Search guaranteed web search?</summary><div class="answer" data-i18n="faq.a3">No. Their URL templates may prefill your query, open standard search results, or require sign-in or submit — behavior varies by service and session. There's no end-to-end verification or forced AI/web mode. Use them like any other engine.</div></details>
+        <details><summary data-i18n="faq.q4">How do I uninstall it?</summary><div class="answer" data-i18n="faq.a4">Run the one-line uninstaller: curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/uninstall.sh | sh. It removes the package, launchers, schema, desktop entries and the provider manifest from ~/.local and /usr/local. Append -s -- --purge to also delete your custom providers, settings and favicon cache. From a clone you can run sh uninstall.sh (or sh uninstall.sh --purge).</div></details>
+        <details><summary data-i18n="faq.q5">Which browsers are supported?</summary><div class="answer" data-i18n="faq.a5">Any browser or command. The default is xdg-open; you can set firefox, google-chrome, or even "flatpak run org.mozilla.firefox".</div></details>
+        <details><summary data-i18n="faq.q6">Does it work on Wayland?</summary><div class="answer" data-i18n="faq.a6">Yes. It is a regular search provider, so it behaves the same on Wayland and X11.</div></details>
+        <details><summary data-i18n="faq.q7">Why does the installer need sudo?</summary><div class="answer" data-i18n="faq.a7">GNOME Shell 40+ only scans system data directories for search providers, so the provider manifest must live in /usr/local/share — that requires sudo. install-local.sh also uses sudo for legacy cleanup. Review install-local.sh for the exact sudo steps.</div></details>
       </div>
     </div>
   </section>
@@ -528,147 +609,162 @@
     "en": {
       "a11y.skip": "Skip to content",
       "a11y.theme": "Toggle theme",
+      "a11y.menu": "Open menu",
       "nav.features": "Features", "nav.install": "Install", "nav.uninstall": "Uninstall", "nav.providers": "Providers", "nav.faq": "FAQ", "nav.star": "Star",
-      "hero.badge": "GNOME Shell extension",
+      "hero.badge": "GNOME Shell search provider",
       "hero.title": "Search the web from your GNOME desktop",
-      "hero.subtitle": "Pick one or many search engines and search straight from the Activities Overview. Press Enter and the result opens in your browser.",
+      "hero.subtitle": "Pick one or many search engines and search straight from the Activities Overview — the Super key search box. Press Enter and each result opens in your default browser.",
       "hero.cta": "Install now", "hero.github": "View on GitHub",
       "hero.termLabel": "One-line install", "hero.copy": "Copy", "hero.copied": "Copied!",
-      "hero.note": "Works on GNOME Shell 40+. The installer asks for sudo only to register the provider system-wide.",
-      "trust.shell": "GNOME Shell", "trust.deps": "Zero dependencies", "trust.license": "MIT licensed", "trust.providers": "52 providers",
+      "hero.note": "Works on GNOME Shell 40+. The installer requires sudo for system registration and legacy cleanup.",
+      "trust.shell": "GNOME Shell", "trust.deps": "Stdlib-only daemon", "trust.license": "MIT licensed", "trust.providers": "56 providers",
       "features.title": "Everything you need in the overview",
       "features.subtitle": "One tiny provider, dozens of engines, no background bloat.",
       "f1.t": "Many engines at once", "f1.d": "Enable up to five search engines and get a dedicated result row for each one.",
-      "f2.t": "52 built-in providers", "f2.d": "Web, images, maps, news, communities, media and reference — all ready to go.",
+      "f2.t": "56 built-in providers", "f2.d": "Web, images, maps, news, communities, media and reference — all ready to go.",
       "f3.t": "Custom providers", "f3.d": "Turn any website with a search box into a provider with its own URL template.",
       "f4.t": "Choose your browser", "f4.d": "Open results in Firefox, a Flatpak browser, or anything you can run from a command.",
       "f5.t": "Native settings window", "f5.d": "A GTK4 preferences app with a searchable icon grid and instant switches.",
-      "f6.t": "Zero dependencies", "f6.d": "Pure Python standard library — the D-Bus service is implemented from scratch.",
+      "f6.t": "Daemon: Python stdlib only", "f6.d": "The D-Bus service uses only Python's standard library. The GTK4/PyGObject preferences window is optional.",
       "f7.t": "Native GSettings", "f7.d": "Script it with gsettings, with a transparent JSON fallback when the schema is absent.",
       "f8.t": "Localized", "f8.d": "English, Brazilian Portuguese and Spanish, auto-detected.",
-      "install.title": "Install in under a minute",
-      "install.subtitle": "No cloning, no pip, no build tools. One command.",
-      "install.s1t": "Run the one-liner", "install.s1d": "Paste the command above into a terminal. It downloads the latest version and installs it for your user.",
+      "install.title": "Install from one command",
+      "install.subtitle": "No cloning, no pip, no build tools.",
+      "install.s1t": "Run the one-liner", "install.s1d": "Paste the command into a terminal. It downloads the latest version and installs it for your user.",
       "install.s2t": "Reload GNOME Shell", "install.s2d": "Log out and back in (or restart the Shell) so it discovers the provider.",
       "install.s3t": "Enable your engines", "install.s3d": "Open Settings → Search, or launch the providers app from the app grid.",
-      "install.notet": "sudo is used once.", "install.note": "It only copies the search-provider manifest into /usr/local/share, because GNOME Shell scans system data directories for providers.",
+      "install.notet": "Requires sudo.", "install.note": "The installer uses sudo to register the search-provider manifest system-wide (GNOME Shell scans system data directories) and for legacy cleanup. Review install-local.sh for the exact sudo steps.",
       "install.check": "Not showing up? Run",
       "uninstall.title": "Clean removal in one command",
       "uninstall.subtitle": "Changed your mind? Take everything back out — package, schema, launchers and provider manifest.",
       "uninstall.termLabel": "One-line uninstall", "uninstall.copy": "Copy", "uninstall.copied": "Copied!",
       "uninstall.notet": "Want a clean slate?",
-      "uninstall.note": "Append -s -- --purge to the command to also delete your custom providers, settings and the favicon cache. Log out and back in afterwards for GNOME Shell to forget the provider.",
-      "providers.title": "52 providers, seven categories",
+      "uninstall.note": "Append -s -- --purge to also delete your custom providers, settings and favicon cache. Log out and back in afterwards for GNOME Shell to forget the provider.",
+      "providers.title": "56 providers, seven categories",
       "providers.subtitle": "Enable any combination — up to five at a time.",
       "providers.note": "Kagi may show a sign-in wall; You.com works anonymously.",
+      "ai.heading": "AI entries: URL templates may prefill, require submit/sign-in",
+      "ai.body": "ChatGPT Search, Claude, Grok and Microsoft Copilot Search appear in Web Search above. Their URL templates may prefill your query, open standard search results, or require sign-in or submit — behavior varies by service and session. No end-to-end verification or forced AI/web mode; enable like any other engine, up to five at a time.",
       "cat.web": "Web Search", "cat.images": "Images", "cat.maps": "Maps", "cat.google": "Google Services",
       "cat.communities": "Communities", "cat.media": "Media", "cat.reference": "Reference & Tech",
       "limit.title": "Why only five at once?",
-      "limit.body": "GNOME Shell renders at most five results per search provider — a hard limit in the Shell itself, not in this extension. Because each engine adds its own result row, the app caps enabling at five and explains when you try a sixth. Nothing is broken; it's the platform.",
+      "limit.body": "GNOME Shell renders at most five results per search provider — a hard limit in the Shell itself, not in this provider. Each engine adds its own result row, so the app caps enabling at five and explains when you try a sixth. Nothing is broken; it's the platform.",
       "faq.title": "Frequently asked questions",
-      "faq.q1": "Does it send my data anywhere?", "faq.a1": "No. Everything runs locally. When you press Enter, your browser opens the search URL — just like typing it yourself.",
-      "faq.q2": "How do I uninstall it?", "faq.a2": "Run the one-line uninstaller: curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/uninstall.sh | sh. It removes the package, launchers, schema, desktop entries and the provider manifest from ~/.local and /usr/local. Append -s -- --purge to also delete your custom providers, settings and favicon cache. From a clone you can run sh uninstall.sh (or sh uninstall.sh --purge).",
-      "faq.q3": "Which browsers are supported?", "faq.a3": "Any browser or command. The default is xdg-open; you can set firefox, google-chrome, or even \"flatpak run org.mozilla.firefox\".",
-      "faq.q4": "Does it work on Wayland?", "faq.a4": "Yes. It is a regular search provider, so it behaves the same on Wayland and X11.",
-      "faq.q5": "Why does the installer need sudo?", "faq.a5": "GNOME Shell 40+ only scans system data directories for search providers, so the provider manifest must live in /usr/local/share. That single copy needs root.",
+      "faq.q1": "Does it send my data anywhere?", "faq.a1": "When you press Enter, your browser opens the search URL — just like typing it yourself — so the destination engine receives your query. The provider itself doesn't run a backend or require an API key. The installer and preferences window may fetch site favicons (including from Google/DuckDuckGo icon services) for display; see favicons.py. Review the source for exact network behavior.",
+      "faq.q2": "How is it different from my browser address bar?", "faq.a2": "It isn't a browser extension and doesn't touch your address bar. It adds search results to the GNOME Activities Overview (the Super key search box). Pressing Enter opens the chosen engine's results in your default browser.",
+      "faq.q3": "Are ChatGPT, Claude, Grok and Copilot Search guaranteed web search?", "faq.a3": "No. Their URL templates may prefill your query, open standard search results, or require sign-in or submit — behavior varies by service and session. There's no end-to-end verification or forced AI/web mode. Use them like any other engine.",
+      "faq.q4": "How do I uninstall it?", "faq.a4": "Run the one-line uninstaller: curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/uninstall.sh | sh. It removes the package, launchers, schema, desktop entries and the provider manifest from ~/.local and /usr/local. Append -s -- --purge to also delete your custom providers, settings and favicon cache. From a clone you can run sh uninstall.sh (or sh uninstall.sh --purge).",
+      "faq.q5": "Which browsers are supported?", "faq.a5": "Any browser or command. The default is xdg-open; you can set firefox, google-chrome, or even \"flatpak run org.mozilla.firefox\".",
+      "faq.q6": "Does it work on Wayland?", "faq.a6": "Yes. It is a regular search provider, so it behaves the same on Wayland and X11.",
+      "faq.q7": "Why does the installer need sudo?", "faq.a7": "GNOME Shell 40+ only scans system data directories for search providers, so the provider manifest must live in /usr/local/share — that requires sudo. install-local.sh also uses sudo for legacy cleanup. Review install-local.sh for the exact sudo steps.",
       "footer.built": "Built for GNOME.", "footer.repo": "GitHub repository", "footer.license": "MIT licensed",
       "footer.fork": "Forked from quiquevr/gnome-web-search-provider", "footer.disclaimer": "Not affiliated with the GNOME Project."
     },
     "pt-BR": {
-      "a11y.skip": "Pular para o conteudo",
+      "a11y.skip": "Pular para o conteúdo",
       "a11y.theme": "Alternar tema",
+      "a11y.menu": "Abrir menu",
       "nav.features": "Recursos", "nav.install": "Instalar", "nav.uninstall": "Desinstalar", "nav.providers": "Provedores", "nav.faq": "FAQ", "nav.star": "Estrela",
-      "hero.badge": "Extensão do GNOME Shell",
+      "hero.badge": "Provedor de busca do GNOME Shell",
       "hero.title": "Busque na web direto do seu GNOME",
-      "hero.subtitle": "Escolha um ou vários mecanismos de busca e pesquise pela Visão de Atividades. Aperte Enter e o resultado abre no seu navegador.",
+      "hero.subtitle": "Escolha um ou vários mecanismos de busca e pesquise pela Visão de Atividades — a caixa de pesquisa da tecla Super. Aperte Enter e cada resultado abre no seu navegador padrão.",
       "hero.cta": "Instalar agora", "hero.github": "Ver no GitHub",
       "hero.termLabel": "Instalação em uma linha", "hero.copy": "Copiar", "hero.copied": "Copiado!",
-      "hero.note": "Funciona no GNOME Shell 40+. O instalador pede sudo apenas para registrar o provedor no sistema.",
-      "trust.shell": "GNOME Shell", "trust.deps": "Zero dependências", "trust.license": "Licença MIT", "trust.providers": "52 provedores",
+      "hero.note": "Funciona no GNOME Shell 40+. O instalador usa sudo para registrar o provedor no sistema.",
+      "trust.shell": "GNOME Shell", "trust.deps": "Daemon: stdlib do Python", "trust.license": "Licença MIT", "trust.providers": "56 provedores",
       "features.title": "Tudo o que você precisa na visão geral",
       "features.subtitle": "Um provedor enxuto, dezenas de mecanismos, sem peso em segundo plano.",
       "f1.t": "Vários mecanismos ao mesmo tempo", "f1.d": "Ative até cinco mecanismos e tenha uma linha de resultado para cada um.",
-      "f2.t": "52 provedores nativos", "f2.d": "Web, imagens, mapas, notícias, comunidades, mídia e referência — prontos para usar.",
+      "f2.t": "56 provedores nativos", "f2.d": "Web, imagens, mapas, notícias, comunidades, mídia e referência — prontos para usar.",
       "f3.t": "Provedores personalizados", "f3.d": "Transforme qualquer site com busca em um provedor com sua própria URL.",
       "f4.t": "Escolha o navegador", "f4.d": "Abra os resultados no Firefox, num navegador Flatpak ou em qualquer comando.",
       "f5.t": "Janela de configuração nativa", "f5.d": "Um app GTK4 com grade de ícones pesquisável e interruptores instantâneos.",
-      "f6.t": "Zero dependências", "f6.d": "Apenas a biblioteca padrão do Python — o serviço D-Bus é implementado do zero.",
+      "f6.t": "Daemon: stdlib do Python", "f6.d": "O serviço D-Bus usa apenas a biblioteca padrão do Python. A janela de preferências GTK4/PyGObject é opcional.",
       "f7.t": "GSettings nativo", "f7.d": "Automatize com gsettings, com fallback transparente em JSON quando o schema não existe.",
       "f8.t": "Localizado", "f8.d": "Inglês, português do Brasil e espanhol, com detecção automática.",
-      "install.title": "Instale em menos de um minuto",
-      "install.subtitle": "Sem clonar, sem pip, sem ferramentas de build. Um comando.",
-      "install.s1t": "Rode o comando", "install.s1d": "Cole o comando acima no terminal. Ele baixa a versão mais recente e instala para o seu usuário.",
+      "install.title": "Instale com um único comando",
+      "install.subtitle": "Sem clonar, sem pip, sem ferramentas de build.",
+      "install.s1t": "Rode o comando", "install.s1d": "Cole o comando no terminal. Ele baixa a versão mais recente e instala para o seu usuário.",
       "install.s2t": "Recarregue o GNOME Shell", "install.s2d": "Saia e entre de novo (ou reinicie o Shell) para que ele descubra o provedor.",
       "install.s3t": "Ative seus mecanismos", "install.s3d": "Abra Configurações → Pesquisa, ou rode o app de provedores na grade de aplicativos.",
-      "install.notet": "O sudo é usado uma vez.", "install.note": "Ele apenas copia o manifesto do provedor para /usr/local/share, porque o GNOME Shell varre diretórios de dados do sistema.",
+      "install.notet": "Requer sudo.", "install.note": "O instalador usa sudo para registrar o manifesto do provedor no sistema (o GNOME Shell varre diretórios de dados do sistema) e para limpeza de legado. Revise o install-local.sh para as etapas exatas de sudo.",
       "install.check": "Não apareceu? Rode",
       "uninstall.title": "Remoção limpa em um comando",
       "uninstall.subtitle": "Mudou de ideia? Remove tudo de volta — pacote, schema, lançadores e o manifesto do provedor.",
       "uninstall.termLabel": "Desinstalação em uma linha", "uninstall.copy": "Copiar", "uninstall.copied": "Copiado!",
       "uninstall.notet": "Quer começar do zero?",
       "uninstall.note": "Anexe -s -- --purge ao comando para apagar também seus provedores personalizados, configurações e o cache de favicons. Saia e entre de novo depois para o GNOME Shell esquecer o provedor.",
-      "providers.title": "52 provedores, sete categorias",
+      "providers.title": "56 provedores, sete categorias",
       "providers.subtitle": "Ative qualquer combinação — até cinco por vez.",
       "providers.note": "O Kagi pode exigir login; o You.com funciona anonimamente.",
+      "ai.heading": "Entradas de IA: modelos de URL podem pré-preencher, exigir envio/login",
+      "ai.body": "ChatGPT Search, Claude, Grok e Microsoft Copilot Search aparecem em Busca Web acima. Seus modelos de URL podem pré-preencher sua consulta, abrir resultados de busca padrão ou exigir login/envio — o comportamento varia conforme o serviço e a sessão. Não há verificação ponta a ponta nem modo de busca de IA forçado; ative-os como qualquer outro mecanismo, até cinco por vez.",
       "cat.web": "Busca Web", "cat.images": "Imagens", "cat.maps": "Mapas", "cat.google": "Serviços Google",
       "cat.communities": "Comunidades", "cat.media": "Mídia", "cat.reference": "Referência e Tecnologia",
       "limit.title": "Por que só cinco por vez?",
-      "limit.body": "O GNOME Shell exibe no máximo cinco resultados por provedor de busca — um limite do próprio Shell, não desta extensão. Como cada mecanismo adiciona sua própria linha, o app limita a ativação a cinco e avisa quando você tenta o sexto. Não há nada quebrado; é a plataforma.",
+      "limit.body": "O GNOME Shell exibe no máximo cinco resultados por provedor de busca — um limite do próprio Shell, não deste provedor. Cada mecanismo adiciona sua própria linha, então o app limita a ativação a cinco e avisa quando você tenta o sexto. Não há nada quebrado; é a plataforma.",
       "faq.title": "Perguntas frequentes",
-      "faq.q1": "Ele envia meus dados para algum lugar?", "faq.a1": "Não. Tudo roda localmente. Ao apertar Enter, seu navegador abre a URL de busca — como se você a digitasse.",
-      "faq.q2": "Como desinstalo?", "faq.a2": "Rode o desinstalador em uma linha: curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/uninstall.sh | sh. Ele remove o pacote, os lançadores, o schema, os arquivos .desktop e o manifesto do provedor de ~/.local e /usr/local. Anexe -s -- --purge para apagar também seus provedores personalizados, configurações e o cache de favicons. De um clone, rode sh uninstall.sh (ou sh uninstall.sh --purge).",
-      "faq.q3": "Quais navegadores são suportados?", "faq.a3": "Qualquer navegador ou comando. O padrão é xdg-open; você pode definir firefox, google-chrome ou até \"flatpak run org.mozilla.firefox\".",
-      "faq.q4": "Funciona no Wayland?", "faq.a4": "Sim. É um provedor de busca comum, então se comporta igual no Wayland e no X11.",
-      "faq.q5": "Por que o instalador precisa de sudo?", "faq.a5": "O GNOME Shell 40+ só varre diretórios de dados do sistema, então o manifesto do provedor precisa ficar em /usr/local/share. Essa única cópia exige root.",
+      "faq.q1": "Ele envia meus dados para algum lugar?", "faq.a1": "Ao apertar Enter, seu navegador abre a URL de busca — como se você a digitasse — então o mecanismo de destino recebe sua consulta. O provedor não executa um backend nem requer chave de API. O instalador e a janela de preferências podem buscar favicons de sites (incluindo serviços de ícones do Google/DuckDuckGo) para exibição; veja favicons.py. Revise o código-fonte para o comportamento exato da rede.",
+      "faq.q2": "Como isso é diferente da barra de endereços do navegador?", "faq.a2": "Não é uma extensão de navegador e não toca na barra de endereços. Ele adiciona resultados de busca à Visão de Atividades (a caixa de pesquisa da tecla Super). Apertar Enter abre os resultados do mecanismo escolhido no seu navegador padrão.",
+      "faq.q3": "O ChatGPT, Claude, Grok e Copilot Search são busca na web garantida?", "faq.a3": "Não. Seus modelos de URL podem pré-preencher sua consulta, abrir resultados de busca padrão ou exigir login/envio — o comportamento varia conforme o serviço e a sessão. Não há verificação ponta a ponta nem modo de busca de IA forçado. Use-os como qualquer outro mecanismo.",
+      "faq.q4": "Como desinstalo?", "faq.a4": "Rode o desinstalador em uma linha: curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/uninstall.sh | sh. Ele remove o pacote, os lançadores, o schema, os arquivos .desktop e o manifesto do provedor de ~/.local e /usr/local. Anexe -s -- --purge para apagar também seus provedores personalizados, configurações e o cache de favicons. De um clone, rode sh uninstall.sh (ou sh uninstall.sh --purge).",
+      "faq.q5": "Quais navegadores são suportados?", "faq.a5": "Qualquer navegador ou comando. O padrão é xdg-open; você pode definir firefox, google-chrome ou até \"flatpak run org.mozilla.firefox\".",
+      "faq.q6": "Funciona no Wayland?", "faq.a6": "Sim. É um provedor de busca comum, então se comporta igual no Wayland e no X11.",
+      "faq.q7": "Por que o instalador precisa de sudo?", "faq.a7": "O GNOME Shell 40+ só varre diretórios de dados do sistema, então o manifesto do provedor precisa ficar em /usr/local/share — isso requer sudo. O install-local.sh também usa sudo para limpeza de legado. Revise o install-local.sh para as etapas exatas de sudo.",
       "footer.built": "Feito para o GNOME.", "footer.repo": "Repositório no GitHub", "footer.license": "Licença MIT",
       "footer.fork": "Fork de quiquevr/gnome-web-search-provider", "footer.disclaimer": "Não afiliado ao Projeto GNOME."
     },
     "es": {
       "a11y.skip": "Saltar al contenido",
       "a11y.theme": "Cambiar tema",
+      "a11y.menu": "Abrir menú",
       "nav.features": "Características", "nav.install": "Instalar", "nav.uninstall": "Desinstalar", "nav.providers": "Proveedores", "nav.faq": "FAQ", "nav.star": "Estrella",
-      "hero.badge": "Extensión de GNOME Shell",
+      "hero.badge": "Proveedor de búsqueda de GNOME Shell",
       "hero.title": "Busca en la web desde tu escritorio GNOME",
-      "hero.subtitle": "Elige uno o varios motores de búsqueda y busca desde la Vista de Actividades. Pulsa Enter y el resultado se abre en tu navegador.",
+      "hero.subtitle": "Elige uno o varios motores de búsqueda y busca desde la Vista de Actividades — la caja de búsqueda de la tecla Super. Pulsa Enter y cada resultado se abre en tu navegador predeterminado.",
       "hero.cta": "Instalar ahora", "hero.github": "Ver en GitHub",
       "hero.termLabel": "Instalación en una línea", "hero.copy": "Copiar", "hero.copied": "¡Copiado!",
-      "hero.note": "Funciona en GNOME Shell 40+. El instalador pide sudo solo para registrar el proveedor en el sistema.",
-      "trust.shell": "GNOME Shell", "trust.deps": "Cero dependencias", "trust.license": "Licencia MIT", "trust.providers": "52 proveedores",
+      "hero.note": "Funciona en GNOME Shell 40+. El instalador usa sudo para registrar el proveedor en el sistema.",
+      "trust.shell": "GNOME Shell", "trust.deps": "Daemon: solo stdlib de Python", "trust.license": "Licencia MIT", "trust.providers": "56 proveedores",
       "features.title": "Todo lo que necesitas en la vista general",
       "features.subtitle": "Un proveedor ligero, decenas de motores, sin consumo en segundo plano.",
       "f1.t": "Varios motores a la vez", "f1.d": "Activa hasta cinco motores y obtén una fila de resultado para cada uno.",
-      "f2.t": "52 proveedores integrados", "f2.d": "Web, imágenes, mapas, noticias, comunidades, medios y referencia — listos para usar.",
+      "f2.t": "56 proveedores integrados", "f2.d": "Web, imágenes, mapas, noticias, comunidades, medios y referencia — listos para usar.",
       "f3.t": "Proveedores personalizados", "f3.d": "Convierte cualquier sitio con buscador en un proveedor con su propia URL.",
       "f4.t": "Elige tu navegador", "f4.d": "Abre los resultados en Firefox, un navegador Flatpak o cualquier comando.",
       "f5.t": "Ventana de ajustes nativa", "f5.d": "Una app GTK4 con una cuadrícula de iconos buscable e interruptores instantáneos.",
-      "f6.t": "Cero dependencias", "f6.d": "Solo la biblioteca estándar de Python — el servicio D-Bus se implementa desde cero.",
+      "f6.t": "Daemon: solo stdlib de Python", "f6.d": "El servicio D-Bus usa solo la biblioteca estándar de Python. La ventana de preferencias GTK4/PyGObject es opcional.",
       "f7.t": "GSettings nativo", "f7.d": "Automatízalo con gsettings, con respaldo transparente en JSON si falta el esquema.",
       "f8.t": "Localizado", "f8.d": "Inglés, portugués de Brasil y español, con detección automática.",
-      "install.title": "Instala en menos de un minuto",
-      "install.subtitle": "Sin clonar, sin pip, sin herramientas de compilación. Un solo comando.",
-      "install.s1t": "Ejecuta el comando", "install.s1d": "Pega el comando de arriba en una terminal. Descarga la última versión y la instala para tu usuario.",
+      "install.title": "Instala con un solo comando",
+      "install.subtitle": "Sin clonar, sin pip, sin herramientas de compilación.",
+      "install.s1t": "Ejecuta el comando", "install.s1d": "Pega el comando en una terminal. Descarga la última versión y la instala para tu usuario.",
       "install.s2t": "Recarga GNOME Shell", "install.s2d": "Cierra sesión y vuelve a entrar (o reinicia el Shell) para que detecte el proveedor.",
       "install.s3t": "Activa tus motores", "install.s3d": "Abre Configuración → Búsqueda, o ejecuta la app de proveedores desde la cuadrícula.",
-      "install.notet": "sudo se usa una vez.", "install.note": "Solo copia el manifiesto del proveedor a /usr/local/share, porque GNOME Shell escanea directorios de datos del sistema.",
+      "install.notet": "Se requiere sudo.", "install.note": "El instalador usa sudo para registrar el manifiesto del proveedor en el sistema (GNOME Shell escanea directorios de datos del sistema) y para limpieza de legado. Revisa install-local.sh para los pasos exactos de sudo.",
       "install.check": "¿No aparece? Ejecuta",
       "uninstall.title": "Eliminación limpia en un comando",
       "uninstall.subtitle": "¿Cambiaste de opinión? Quita todo lo instalado — paquete, esquema, lanzadores y el manifiesto del proveedor.",
       "uninstall.termLabel": "Desinstalación en una línea", "uninstall.copy": "Copiar", "uninstall.copied": "¡Copiado!",
       "uninstall.notet": "¿Quieres empezar de cero?",
       "uninstall.note": "Añade -s -- --purge al comando para borrar también tus proveedores personalizados, ajustes y la caché de favicons. Cierra sesión y vuelve a entrar después para que GNOME Shell olvide el proveedor.",
-      "providers.title": "52 proveedores, siete categorías",
+      "providers.title": "56 proveedores, siete categorías",
       "providers.subtitle": "Activa cualquier combinación — hasta cinco a la vez.",
       "providers.note": "Kagi puede pedir inicio de sesión; You.com funciona de forma anónima.",
+      "ai.heading": "Entradas de IA: las plantillas de URL pueden prellenar, requerir envío/inicio de sesión",
+      "ai.body": "ChatGPT Search, Claude, Grok y Microsoft Copilot Search aparecen en Búsqueda web arriba. Sus plantillas de URL pueden prellenar tu consulta, abrir resultados de búsqueda estándar o requerir inicio de sesión o envío — el comportamiento varía según el servicio y tu sesión. No hay verificación de extremo a extremo ni modo de búsqueda de IA forzado; actívalos como cualquier otro motor, hasta cinco a la vez.",
       "cat.web": "Búsqueda web", "cat.images": "Imágenes", "cat.maps": "Mapas", "cat.google": "Servicios de Google",
       "cat.communities": "Comunidades", "cat.media": "Medios", "cat.reference": "Referencia y tecnología",
       "limit.title": "¿Por qué solo cinco a la vez?",
-      "limit.body": "GNOME Shell muestra como máximo cinco resultados por proveedor de búsqueda — un límite del propio Shell, no de esta extensión. Como cada motor añade su propia fila, la app limita la activación a cinco y avisa cuando intentas el sexto. No hay nada roto; es la plataforma.",
+      "limit.body": "GNOME Shell muestra como máximo cinco resultados por proveedor de búsqueda — un límite del propio Shell, no de este proveedor. Cada motor añade su propia fila, así que la app limita la activación a cinco y avisa cuando intentas el sexto. No hay nada roto; es la plataforma.",
       "faq.title": "Preguntas frecuentes",
-      "faq.q1": "¿Envía mis datos a algún lugar?", "faq.a1": "No. Todo se ejecuta localmente. Al pulsar Enter, tu navegador abre la URL de búsqueda, como si la escribieras tú.",
-      "faq.q2": "¿Cómo lo desinstalo?", "faq.a2": "Ejecuta el desinstalador en una línea: curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/uninstall.sh | sh. Elimina el paquete, los lanzadores, el esquema, los .desktop y el manifiesto del proveedor de ~/.local y /usr/local. Añade -s -- --purge para borrar también tus proveedores personalizados, ajustes y la caché de favicons. Desde un clon, ejecuta sh uninstall.sh (o sh uninstall.sh --purge).",
-      "faq.q3": "¿Qué navegadores son compatibles?", "faq.a3": "Cualquier navegador o comando. El predeterminado es xdg-open; puedes usar firefox, google-chrome o incluso \"flatpak run org.mozilla.firefox\".",
-      "faq.q4": "¿Funciona en Wayland?", "faq.a4": "Sí. Es un proveedor de búsqueda normal, así que se comporta igual en Wayland y X11.",
-      "faq.q5": "¿Por qué el instalador necesita sudo?", "faq.a5": "GNOME Shell 40+ solo escanea directorios de datos del sistema, así que el manifiesto debe estar en /usr/local/share. Esa única copia necesita root.",
+      "faq.q1": "¿Envía mis datos a algún lugar?", "faq.a1": "Al pulsar Enter, tu navegador abre la URL de búsqueda, como si la escribieras tú — entonces el motor de destino recibe tu consulta. El proveedor no ejecuta un backend ni requiere clave de API. El instalador y la ventana de preferencias pueden obtener favicons de sitios (incluidos servicios de iconos de Google/DuckDuckGo) para su visualización; consulta favicons.py. Revisa el código fuente para el comportamiento exacto de la red.",
+      "faq.q2": "¿En qué se diferencia de la barra de direcciones de mi navegador?", "faq.a2": "No es una extensión de navegador y no toca tu barra de direcciones. Añade resultados de búsqueda a la Vista de Actividades (la caja de búsqueda de la tecla Super). Pulsar Enter abre los resultados del motor elegido en tu navegador predeterminado.",
+      "faq.q3": "¿Son ChatGPT, Claude, Grok y Copilot Search búsqueda web garantizada?", "faq.a3": "No. Sus plantillas de URL pueden prellenar tu consulta, abrir resultados de búsqueda estándar o requerir inicio de sesión o envío — el comportamiento varía según el servicio y tu sesión. No hay verificación de extremo a extremo ni modo de búsqueda de IA forzado. Úsalos como cualquier otro motor.",
+      "faq.q4": "¿Cómo lo desinstalo?", "faq.a4": "Ejecuta el desinstalador en una línea: curl -fsSL https://raw.githubusercontent.com/zonaro/gnome-web-search-provider/master/uninstall.sh | sh. Elimina el paquete, los lanzadores, el esquema, los .desktop y el manifiesto del proveedor de ~/.local y /usr/local. Añade -s -- --purge para borrar también proveedores personalizados, ajustes y la caché de favicons. Desde un clon, ejecuta sh uninstall.sh (o sh uninstall.sh --purge).",
+      "faq.q5": "¿Qué navegadores son compatibles?", "faq.a5": "Cualquier navegador o comando. El predeterminado es xdg-open; puedes usar firefox, google-chrome o incluso \"flatpak run org.mozilla.firefox\".",
+      "faq.q6": "¿Funciona en Wayland?", "faq.a6": "Sí. Es un proveedor de búsqueda normal, así que se comporta igual en Wayland y X11.",
+      "faq.q7": "¿Por qué el instalador necesita sudo?", "faq.a7": "GNOME Shell 40+ solo escanea directorios de datos del sistema, así que el manifiesto debe estar en /usr/local/share — eso requiere sudo. install-local.sh también usa sudo para limpieza de legado. Revisa install-local.sh para los pasos exactos de sudo.",
       "footer.built": "Hecho para GNOME.", "footer.repo": "Repositorio en GitHub", "footer.license": "Licencia MIT",
       "footer.fork": "Fork de quiquevr/gnome-web-search-provider", "footer.disclaimer": "No afiliado al Proyecto GNOME."
     }
@@ -719,7 +815,7 @@
     try { localStorage.setItem("gwsp.locale", locale); } catch (e) {}
   }
 
-  function fallbackLanguage() {
+  function initLocaleButtons() {
     var btns = document.querySelectorAll(".langs button[data-lang]");
     for (var i = 0; i < btns.length; i++) {
       btns[i].addEventListener("click", function () { applyLocale(this.getAttribute("data-lang")); });
@@ -794,10 +890,26 @@
     });
   }
 
+  function initMobileMenu() {
+    var btn = document.getElementById("menuBtn");
+    var nav = document.getElementById("navLinks");
+    if (!btn || !nav) return;
+    function openMenu() { nav.classList.add("open"); btn.setAttribute("aria-expanded", "true"); }
+    function closeMenu() { nav.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); btn.focus(); }
+    btn.addEventListener("click", function () { nav.classList.contains("open") ? closeMenu() : openMenu(); });
+    nav.querySelectorAll("a").forEach(function (a) {
+      a.addEventListener("click", closeMenu);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && nav.classList.contains("open")) closeMenu();
+    });
+  }
+
   applyLocale(detectLocale());
-  fallbackLanguage();
+  initLocaleButtons();
   initCopy();
   initTheme();
+  initMobileMenu();
 </script>
 </body>
 </html>
