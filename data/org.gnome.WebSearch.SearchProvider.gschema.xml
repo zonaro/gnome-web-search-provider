@@ -11,7 +11,7 @@
           Valid ids are the keys in
           src/gnome_web_search_provider/providers.py
           (e.g. google, bing, duckduckgo, brave, startpage, google-images,
-          google-maps, bing-images, youtube, ...). Unknown ids are ignored.
+          google-maps, bing-images, youtube, chatgpt, claude, grok, copilot, ...). Unknown ids are ignored.
         </description>
     </key>
     <key name="browser" type="s">

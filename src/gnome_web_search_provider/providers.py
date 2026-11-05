@@ -148,6 +148,10 @@ PROVIDERS: Dict[str, SearchProvider] = {
     "perplexity": _p("perplexity", "Perplexity", "https://www.perplexity.ai/search?q={query}", "web"),
     "kagi": _p("kagi", "Kagi", "https://kagi.com/search?q={query}", "web"),
     "you": _p("you", "You.com", "https://you.com/search?q={query}", "web"),
+    "chatgpt": _p("chatgpt", "ChatGPT Search", "https://chatgpt.com/?q={query}", "web"),
+    "claude": _p("claude", "Claude", "https://claude.ai/new?q={query}", "web"),
+    "grok": _p("grok", "Grok", "https://grok.com/?q={query}", "web"),
+    "copilot": _p("copilot", "Microsoft Copilot Search", "https://www.bing.com/search?q={query}&copilot=on", "web"),
     # ----------------------------------------------------------------- Images
     "google-images": _p("google-images", "Google Images", "https://www.google.com/search?udm=2&q={query}", "images"),
     "bing-images": _p("bing-images", "Bing Images", "https://www.bing.com/images/search?q={query}", "images"),

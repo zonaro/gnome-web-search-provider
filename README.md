@@ -58,7 +58,7 @@ silently ignored.
 
 | Category | Providers |
 |---|---|
-| **Web Search** | Google (default), Bing, DuckDuckGo, Brave Search, Startpage, Ecosia, Qwant, Yahoo, Mojeek, Yandex, Baidu, Naver, SearXNG, Yep (Ahrefs), Swisscows, Marginalia, Perplexity, Kagi, You.com |
+| **Web Search** | Google (default), Bing, DuckDuckGo, Brave Search, Startpage, Ecosia, Qwant, Yahoo, Mojeek, Yandex, Baidu, Naver, SearXNG, Yep (Ahrefs), Swisscows, Marginalia, Perplexity, Kagi, You.com, ChatGPT Search, Claude, Grok, Microsoft Copilot Search |
 | **Images** | Google Images, Bing Images, DuckDuckGo Images, Brave Images, Startpage Images |
 | **Maps** | Google Maps, Bing Maps, OpenStreetMap |
 | **Google Services** | Google News, Google Scholar, Google Videos, Google Translate (→ pt), Google Flights, Google Fonts |
